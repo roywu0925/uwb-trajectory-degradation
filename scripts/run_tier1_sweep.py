@@ -1,6 +1,6 @@
 """Tier 1 Task B: the sensor degradation sweep (TIER1_SPEC.md).
 
-    python run_tier1_sweep.py
+    PYTHONPATH=. python scripts/run_tier1_sweep.py  # run from the repo root
 
 Corrupts input_*.csv x, y with controlled Gaussian noise, re-derives
 downstream kinematics from the corrupted positions (or doesn't -- see

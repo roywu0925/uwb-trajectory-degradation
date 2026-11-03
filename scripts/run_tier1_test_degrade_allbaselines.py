@@ -18,7 +18,7 @@ Diagnostic/verification script, not part of the Reproducing pipeline.
 Writes to its own output files; does not touch tier1_test_degrade_raw.csv
 or tier1_test_crossover_playlevel.csv.
 
-    python run_tier1_test_degrade_allbaselines.py
+    PYTHONPATH=. python scripts/run_tier1_test_degrade_allbaselines.py  # run from the repo root
 """
 
 from __future__ import annotations

@@ -1,6 +1,6 @@
 """Tier 1 Task G/H/I: the second degradation axis (TIER1_SPEC_3.md).
 
-    python run_tier1_twoaxis.py
+    PYTHONPATH=. python scripts/run_tier1_twoaxis.py  # run from the repo root
 
 Adds landing-point noise (sigma_ball, on ball_land_x/y) alongside the
 existing player-position noise (sigma_player), to find out whether

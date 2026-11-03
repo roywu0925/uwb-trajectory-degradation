@@ -1,7 +1,7 @@
 """Tier 1 Task P: the fold structure, built once and frozen
 (TIER1_SPEC_5.md, amended by TIER1_SPEC_6.md).
 
-    python run_tier1_taskp.py
+    PYTHONPATH=. python scripts/run_tier1_taskp.py  # run from the repo root
 
 Writes outputs/folds.json BEFORE any model training exists -- 5 grouped
 folds (by game) over the 231 train+val games from outputs/splits.json,

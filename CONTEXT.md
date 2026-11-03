@@ -7,6 +7,13 @@ behind it, which nothing in the code records.
 If you are an assistant picking this up cold, read this file, then
 `README.md`, then `config.py` and `data_loader.py`.
 
+A note on the run logs below: they record commands as they were actually
+typed at the time (e.g. `python run_tier0a.py`), before the repo was
+reorganised into a `scripts/` directory. Run scripts now live in
+`scripts/`; library modules (`config.py`, `data_loader.py`, ...) are
+unchanged at the repo root. See README.md's Reproducing section for the
+current invocation.
+
 ---
 
 ## What this is for
@@ -164,7 +171,8 @@ correct everywhere that path's result gets used.
 ## Current state
 
 Tier 0a has been run end to end on the real Kaggle files
-(`python run_tier0a.py`, 2026-09-20), on week 1 only (`WEEKS = ["w01"]`,
+(`python run_tier0a.py`, 2026-09-20; now `scripts/run_tier0a.py` after the
+scripts/ reorganisation), on week 1 only (`WEEKS = ["w01"]`,
 the default). The pipeline now anchors each play at the real throw frame
 (`player_to_predict`) and uses the play's actual `num_frames_output` as its
 horizon, rather than a fixed lookback — 128 plays, 526 player-tracks,
@@ -231,7 +239,8 @@ before Tier 1 brings PyTorch in, since 3.14 support is still patchy.
 ### Tier 0b (Kalman / IMM), run 2026-09-22
 
 Same week-1 dataset as Tier 0a (128 plays, 526 player-tracks), via
-`python run_tier0a.py`. `data_loader.PlaySample` now carries a `history`
+`python run_tier0a.py` (now `scripts/run_tier0a.py`).
+`data_loader.PlaySample` now carries a `history`
 field (every pre-throw frame per player, not just the anchor), and every
 baseline's signature changed from `f(state, horizon)` to
 `f(sample, horizon)` — a correction to my own spec mid-round, which had

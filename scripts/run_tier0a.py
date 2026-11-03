@@ -1,6 +1,6 @@
 """Tier 0a + 0b end to end.
 
-    python run_tier0a.py
+    PYTHONPATH=. python scripts/run_tier0a.py  # run from the repo root
 
 Writes to outputs/:
     baseline_errors.csv     per-predictor, per-step, per-role errors

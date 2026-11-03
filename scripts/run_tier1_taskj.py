@@ -1,6 +1,6 @@
 """Tier 1 Task J: expand the data, build honest splits (TIER1_SPEC_4.md).
 
-    python run_tier1_taskj.py
+    PYTHONPATH=. python scripts/run_tier1_taskj.py  # run from the repo root
 
 Loads all 18 weeks via cache_pipeline (one week at a time, cached to
 data/cache/), reports peak memory and load time, builds a fixed 70/15/15

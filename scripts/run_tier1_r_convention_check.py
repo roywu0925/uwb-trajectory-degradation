@@ -1,6 +1,6 @@
 """R-convention check (user-flagged modelling question, 2026-09-28).
 
-    python run_tier1_r_convention_check.py
+    PYTHONPATH=. python scripts/run_tier1_r_convention_check.py  # run from the repo root
 
 `run_tier1_sweep.set_filter_R`'s "floor" convention treats `sigma` (the
 injected noise) as the FULL position measurement noise, with a 0.05

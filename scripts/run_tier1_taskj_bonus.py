@@ -1,7 +1,7 @@
 """Tier 1 Task J 'free bonus': re-run the existing Tier 0/1 findings on
 the full 18-week data (TIER1_SPEC_4.md).
 
-    python run_tier1_taskj_bonus.py
+    PYTHONPATH=. python scripts/run_tier1_taskj_bonus.py  # run from the repo root
 
 Reuses the exact sweep machinery from run_tier1_sweep.py /
 run_tier1_crossover.py, unchanged, just pointed at config.WEEKS now

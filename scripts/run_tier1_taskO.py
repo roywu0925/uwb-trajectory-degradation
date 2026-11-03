@@ -1,7 +1,7 @@
 """Tier 1 Task O: restate every finding at the honest primary horizon,
 with 3s as a secondary metric, on the full 18-week data (TIER1_SPEC_5.md).
 
-    python run_tier1_taskO.py
+    PYTHONPATH=. python scripts/run_tier1_taskO.py  # run from the repo root
 
 Runs the crossover grid and the coarse grid (derived mode only, same
 grids/seeds as Parts 2-3, no tuning) on all 2,729 plays, capturing

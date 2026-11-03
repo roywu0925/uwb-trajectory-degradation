@@ -1,7 +1,7 @@
 """Tier 1 Task N: coverage audit, and picking an honest primary horizon
 (TIER1_SPEC_5.md).
 
-    python run_tier1_taskn.py
+    PYTHONPATH=. python scripts/run_tier1_taskn.py  # run from the repo root
 
 `config.MIN_COVERAGE = 0.25` existed from Tier 0a onward but was only ever
 wired into plot_error_curves -- every headline *table* in this project,

@@ -1,7 +1,7 @@
 """Tier 1 Task K: train and evaluate the three residual/direct model
 variants (TIER1_SPEC_6.md, amending TIER1_SPEC_4.md's Task K).
 
-    python run_tier1_taskk.py
+    PYTHONPATH=. python scripts/run_tier1_taskk.py  # run from the repo root
 
 K1 -- residual, robust base:   tbl_kalman_speed(sample, h) + model(sample)
 K2 -- residual, clean champion: velocity_turning_to_ball(sample, h) + model(sample)

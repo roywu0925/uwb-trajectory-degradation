@@ -1,6 +1,6 @@
 """Tier 1 Task D/E/F: the crossover sweep (TIER1_SPEC_2.md).
 
-    python run_tier1_crossover.py
+    PYTHONPATH=. python scripts/run_tier1_crossover.py  # run from the repo root
 
 Task B's coarse grid ([0, 0.2, 0.5, 1, 2, 5]) located the
 constant_velocity/kalman crossing only as "somewhere below 0.2". This runs

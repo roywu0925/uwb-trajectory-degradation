@@ -396,7 +396,7 @@ consistent with the bootstrap estimate and well inside its interval.
 
 **That crossing was checked against all 13 physics baselines, not just the
 three plotted.** Only 3 had ever been scored under noise on the test split;
-the other 10 (`run_tier1_test_degrade_allbaselines.py`) hadn't. `tbl_kalman_speed`
+the other 10 (`scripts/run_tier1_test_degrade_allbaselines.py`) hadn't. `tbl_kalman_speed`
 turns out to be the pointwise-best baseline at every σ across the entire
 bracket the crossing lives in (0.8–2.0), so the crossing computed against
 the full 13-baseline envelope is identical to the one reported — not just
@@ -451,6 +451,13 @@ time (the five lines below marked "measured"); the remaining ~15 physics/
 sweep scripts are unmeasured individually but are lighter-weight than
 training — see the runtime note after the code block.
 
+Run scripts live in `scripts/`; the library modules they import
+(`config.py`, `kalman.py`, ...) stay at the repo root. `PYTHONPATH=.` on
+every invocation below puts the repo root on the import path so those
+imports resolve; run everything from the repo root, which is also what
+keeps the `data/`/`outputs/` paths (relative to the current directory,
+not to the script) working unchanged.
+
 ```bash
 # environment — requires a Kaggle account.
 # Python 3.14.7 is what this project was actually built and run on; no
@@ -469,36 +476,36 @@ pip install -r requirements.txt   # pinned to the versions actually run
 # cache_pipeline.py builds and caches per-week parquet/npz on first use.
 
 # Part 1 — physics baselines and degradation sweep
-python run_tier0a.py                      # Tier 0a/0b: baselines, Kalman, IMM, NIS check
-python run_tier1_sweep.py                 # Task B: coarse degradation grid, all baselines
-python run_tier1_crossover.py             # Task D/E/F: fine-grid crossover + bootstrap CI
-python run_tier1_twoaxis.py               # Task G/H/I: second (ball-land) degradation axis
-python run_tier1_r_convention_check.py    # floor vs quadrature R, both conventions reported
-python run_tier1_taskn.py                 # Task N: coverage audit, picks the 1.9s primary horizon
-python run_tier1_taskO.py                 # Task O: restates every Part 1 finding at 1.9s + 3s
+PYTHONPATH=. python scripts/run_tier0a.py                      # Tier 0a/0b: baselines, Kalman, IMM, NIS check
+PYTHONPATH=. python scripts/run_tier1_sweep.py                 # Task B: coarse degradation grid, all baselines
+PYTHONPATH=. python scripts/run_tier1_crossover.py             # Task D/E/F: fine-grid crossover + bootstrap CI
+PYTHONPATH=. python scripts/run_tier1_twoaxis.py               # Task G/H/I: second (ball-land) degradation axis
+PYTHONPATH=. python scripts/run_tier1_r_convention_check.py    # floor vs quadrature R, both conventions reported
+PYTHONPATH=. python scripts/run_tier1_taskn.py                 # Task N: coverage audit, picks the 1.9s primary horizon
+PYTHONPATH=. python scripts/run_tier1_taskO.py                 # Task O: restates every Part 1 finding at 1.9s + 3s
 
 # Part 2 — model training, cross-validated (CPU; each full run is ~8-28 min — see note)
-python run_tier1_taskj.py                 # expand to 18 weeks, write outputs/splits.json
-python run_tier1_taskp.py                 # write outputs/folds.json, out-of-fold baseline bar
-python run_tier1_taskk.py                 # train K1/K2/K3, 5 folds each      (measured: ~28 min)
-python run_tier1_taskk4.py                # train K4, 5 folds                 (measured: ~10 min*)
-python run_tier1_k5.py                    # train K5, 5 folds                 (measured: ~8 min)
-python run_tier1_taskl.py                 # full 13-baseline + K1-K3 CV table, per-role
-                                           #                                   (measured: ~28 min)
-python run_tier1_taskm.py                 # degradation sweep, K1-K3 + baselines, CV folds only
-python run_tier1_taskk4_degrade.py        # degradation sweep, K4
-python run_tier1_k5_degrade.py            # degradation sweep, K5
+PYTHONPATH=. python scripts/run_tier1_taskj.py                 # expand to 18 weeks, write outputs/splits.json
+PYTHONPATH=. python scripts/run_tier1_taskp.py                 # write outputs/folds.json, out-of-fold baseline bar
+PYTHONPATH=. python scripts/run_tier1_taskk.py                 # train K1/K2/K3, 5 folds each      (measured: ~28 min)
+PYTHONPATH=. python scripts/run_tier1_taskk4.py                # train K4, 5 folds                 (measured: ~10 min*)
+PYTHONPATH=. python scripts/run_tier1_k5.py                    # train K5, 5 folds                 (measured: ~8 min)
+PYTHONPATH=. python scripts/run_tier1_taskl.py                 # full 13-baseline + K1-K3 CV table, per-role
+                                                                 #                                   (measured: ~28 min)
+PYTHONPATH=. python scripts/run_tier1_taskm.py                 # degradation sweep, K1-K3 + baselines, CV folds only
+PYTHONPATH=. python scripts/run_tier1_taskk4_degrade.py        # degradation sweep, K4
+PYTHONPATH=. python scripts/run_tier1_k5_degrade.py            # degradation sweep, K5
 
 # Test-split evaluation — run ONCE. Everything above must be finished and
 # the variant list frozen before this line runs; it is not a selection step.
-python run_tier1_test_pass.py             # train final K1-K5 on all 231 train+val games,
-                                           # score every variant + baseline on the untouched
-                                           # 41-game test split, one pass    (measured: ~20 min)
-python run_tier1_test_degrade.py          # the same degradation sweep, repeated on test
+PYTHONPATH=. python scripts/run_tier1_test_pass.py             # train final K1-K5 on all 231 train+val games,
+                                                                 # score every variant + baseline on the untouched
+                                                                 # 41-game test split, one pass    (measured: ~20 min)
+PYTHONPATH=. python scripts/run_tier1_test_degrade.py          # the same degradation sweep, repeated on test
 
 # Part 3 — local half of the serving-latency measurement (CPU inference
 # floor only; no AWS access needed for this one script)
-python run_tier2b_phase1_local.py         # K3/K5/tbl_kalman_speed local inference timing
+PYTHONPATH=. python scripts/run_tier2b_phase1_local.py         # K3/K5/tbl_kalman_speed local inference timing
 ```
 
 The rest of Part 3 (the round-trip, region, batch-size, throughput, and
@@ -514,8 +521,8 @@ treat unmarked lines as the same order of magnitude, not as measured facts.
 almost certainly a system sleep/contention artifact, not real compute (its
 epoch count and result were normal); the ~10 min figure excludes that
 anomaly. The leakage audit, frozen-R check, gain measurements, and
-effective-window test (a dozen-plus smaller scripts, each named
-`run_tier1_*`) aren't included above — they're forward-pass-only checks
+effective-window test (a dozen-plus smaller scripts in `scripts/`, each
+named `run_tier1_*`) aren't included above — they're forward-pass-only checks
 against already-trained checkpoints, not part of the path to the headline
 numbers. See Repository layout below for what each one answers.
 
@@ -539,40 +546,49 @@ across 18 weeks of data, via column-selective reads and per-week caching.
 - `evaluate.py` — scoring and the coverage-gated summary tables
 - `model.py` — feature engineering (incl. K4's Kalman-velocity variant), the GRU, masked loss
 
+All run scripts below live in `scripts/`, invoked as `PYTHONPATH=. python
+scripts/<name>.py` from the repo root — see Reproducing. Library modules
+(above) stay at the repo root and are imported by name (`from config
+import ...`), which is what `PYTHONPATH=.` is for.
+
 **Part 1 — the physics study**
-- `run_tier0a.py` — Tier 0a/0b baselines, Kalman, IMM, the NIS calibration check
-- `run_tier1_sweep.py` — Task B: coarse degradation grid, every baseline
-- `run_tier1_crossover.py` — Task D/E/F: fine-grid crossover sigma + bootstrap CI
-- `run_tier1_twoaxis.py` — Task G/H/I: the ball-land degradation axis
-- `run_tier1_r_convention_check.py` — floor vs. quadrature R, side by side (adopted quadrature)
-- `run_tier1_taskn.py` — Task N: coverage audit; picks 1.9s as the honest primary horizon
-- `run_tier1_taskO.py` — Task O: restates every earlier finding at 1.9s with coverage attached
+- `scripts/run_tier0a.py` — Tier 0a/0b baselines, Kalman, IMM, the NIS calibration check
+- `scripts/run_tier1_sweep.py` — Task B: coarse degradation grid, every baseline
+- `scripts/run_tier1_crossover.py` — Task D/E/F: fine-grid crossover sigma + bootstrap CI
+- `scripts/run_tier1_twoaxis.py` — Task G/H/I: the ball-land degradation axis
+- `scripts/run_tier1_r_convention_check.py` — floor vs. quadrature R, side by side (adopted quadrature)
+- `scripts/run_tier1_taskn.py` — Task N: coverage audit; picks 1.9s as the honest primary horizon
+- `scripts/run_tier1_taskO.py` — Task O: restates every earlier finding at 1.9s with coverage attached
 
 **Part 2 — the learned models**
-- `run_tier1_taskj.py` / `run_tier1_taskj_bonus.py` — expand to 18 weeks; re-run Part 1 on it
-- `run_tier1_taskp.py` — writes `outputs/folds.json`; the out-of-fold baseline bar K1-K5 beat
-- `run_tier1_taskk.py` — shared training/checkpointing/eval code; trains K1, K2, K3
-- `run_tier1_taskk4.py` / `run_tier1_taskk4_degrade.py` / `run_tier1_taskk4_role.py` — K4
-- `run_tier1_k5.py` / `run_tier1_k5_degrade.py` — K5 (on-the-fly noise augmentation)
-- `run_tier1_taskl.py` — full 13-baseline + K1-K3 CV comparison table, per-role
-- `run_tier1_taskm.py` — the degradation sweep that found the sigma=0.2 collapse
+- `scripts/run_tier1_taskj.py` / `scripts/run_tier1_taskj_bonus.py` — expand to 18 weeks; re-run Part 1 on it
+- `scripts/run_tier1_taskp.py` — writes `outputs/folds.json`; the out-of-fold baseline bar K1-K5 beat
+- `scripts/run_tier1_taskk.py` — shared training/checkpointing/eval code; trains K1, K2, K3
+- `scripts/run_tier1_taskk4.py` / `scripts/run_tier1_taskk4_degrade.py` / `scripts/run_tier1_taskk4_role.py` — K4
+- `scripts/run_tier1_k5.py` / `scripts/run_tier1_k5_degrade.py` — K5 (on-the-fly noise augmentation)
+- `scripts/run_tier1_taskl.py` — full 13-baseline + K1-K3 CV comparison table, per-role
+- `scripts/run_tier1_taskm.py` — the degradation sweep that found the sigma=0.2 collapse
 
 **The leakage audit and mechanism checks** (why the headline numbers are trusted)
-- `run_tier1_taskk_checkB.py` / `_check1_2.py` / `_close.py` / `_permute.py` / `_permute2.py` —
+- `scripts/run_tier1_taskk_checkB.py` / `_check1_2.py` / `_close.py` / `_permute.py` / `_permute2.py` —
   metric/alignment/input-window audit and the label-permutation negative controls
-- `run_tier1_taskm_diag.py` — fine sigma grid, gate saturation, output-magnitude checks
-- `run_tier1_taskm_gain.py` / `run_tier1_gain_full.py` — the velocity-gain measurement (K1/K3/K4/K5)
-- `run_tier1_frozenr.py` / `_bystep.py` — is Kalman-family robustness structural or "being told"?
-- `run_tier1_k3k4_crossover.py` / `run_tier1_k5_tks_crossover.py` — the two crossing-sigma bootstraps
-- `run_tier1_k5_closing_check.py` / `_check2.py` — did K5 converge on `toward_ball_land`? (no)
-- `run_tier1_effective_window.py` — the fixed-ramp smoothing-window test
+- `scripts/run_tier1_taskm_diag.py` — fine sigma grid, gate saturation, output-magnitude checks
+- `scripts/run_tier1_taskm_gain.py` / `scripts/run_tier1_gain_full.py` — the velocity-gain measurement (K1/K3/K4/K5)
+- `scripts/run_tier1_frozenr.py` / `_bystep.py` — is Kalman-family robustness structural or "being told"?
+- `scripts/run_tier1_k3k4_crossover.py` / `scripts/run_tier1_k5_tks_crossover.py` — the two crossing-sigma bootstraps
+- `scripts/run_tier1_k5_closing_check.py` / `_check2.py` — did K5 converge on `toward_ball_land`? (no)
+- `scripts/run_tier1_effective_window.py` — the fixed-ramp smoothing-window test
 
 **Test split**
-- `run_tier1_test_pass.py` — the single frozen-model evaluation against the 41 held-out games
-- `run_tier1_test_degrade.py` — the degradation sweep repeated on that same split
+- `scripts/run_tier1_test_pass.py` — the single frozen-model evaluation against the 41 held-out games
+- `scripts/run_tier1_test_degrade.py` — the degradation sweep repeated on that same split
+- `scripts/run_tier1_test_degrade_allbaselines.py` — the remaining 10 baselines, scored under noise
+  on test for the first time, verifying the crossing against the full 13-baseline envelope
 
 **Tests and utilities**
-- `test_kalman.py`, `test_imm.py`, `smoke_test_degrade.py`, `imm_divergence_check.py` — unit/sanity checks
+- `test_kalman.py`, `test_imm.py` — synthetic sanity checks, stay at the repo root (no run_* dependency)
+- `scripts/smoke_test_degrade.py`, `scripts/imm_divergence_check.py` — unit/sanity checks; moved into
+  `scripts/` because both import from `scripts/run_tier1_sweep.py`
 - `animate.py` — produces `outputs/play_animation.gif`
 
 **Outputs** (`outputs/`)
