@@ -327,10 +327,10 @@ def main():
 
     print("\ntheory cross-check (constant_velocity, derived, both grids):")
     table = theory_table(
-        "outputs/tier1_degradation.csv", OUTPUT_DIR / "tier1_crossover.csv")
+        OUTPUT_DIR / "tier1_degradation.csv", OUTPUT_DIR / "tier1_crossover.csv")
     print(table.round(4).to_string(index=False))
 
-    task_b = pd.read_csv("outputs/tier1_degradation.csv")
+    task_b = pd.read_csv(OUTPUT_DIR / "tier1_degradation.csv")
     plot_robustness_full(task_b, OUTPUT_DIR / "tier1_robustness_full.png")
 
 
