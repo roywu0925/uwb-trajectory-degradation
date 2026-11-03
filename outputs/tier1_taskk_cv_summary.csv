@@ -1,0 +1,4 @@
+variant,cv_mean_primary,cv_std_primary,cv_min_primary,cv_max_primary,cv_mean_3s,cv_std_3s,mean_wall_clock_s,mean_epochs
+K1,1.9088,0.0837,1.792,2.0017,3.3132,0.4654,109.4186,116.6
+K2,1.9042,0.0557,1.8205,1.9771,3.2518,0.4835,105.8972,105.6
+K3,1.8187,0.0435,1.7841,1.891,3.3953,0.5042,90.6098,90.2

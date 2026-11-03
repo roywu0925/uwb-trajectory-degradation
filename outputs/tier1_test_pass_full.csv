@@ -1,0 +1,109 @@
+predictor,kind,horizon,role,test_error,n
+constant_position,baseline,primary,Defensive Coverage,10.861757278442383,681
+constant_position,baseline,primary,Targeted Receiver,15.311579704284668,207
+constant_position,baseline,primary,overall,11.899046897888184,888
+constant_position,baseline,3s,Defensive Coverage,17.661724090576172,38
+constant_position,baseline,3s,Targeted Receiver,25.336889266967773,9
+constant_position,baseline,3s,overall,19.131439208984375,47
+constant_velocity,baseline,primary,Defensive Coverage,4.873030662536621,681
+constant_velocity,baseline,primary,Targeted Receiver,3.3280029296875,207
+constant_velocity,baseline,primary,overall,4.512872219085693,888
+constant_velocity,baseline,3s,Defensive Coverage,9.0742769241333,38
+constant_velocity,baseline,3s,Targeted Receiver,6.887721061706543,9
+constant_velocity,baseline,3s,overall,8.655573844909668,47
+constant_acceleration,baseline,primary,Defensive Coverage,6.329463005065918,681
+constant_acceleration,baseline,primary,Targeted Receiver,5.3839263916015625,207
+constant_acceleration,baseline,primary,overall,6.109050750732422,888
+constant_acceleration,baseline,3s,Defensive Coverage,15.171791076660156,38
+constant_acceleration,baseline,3s,Targeted Receiver,12.054685592651367,9
+constant_acceleration,baseline,3s,overall,14.574899673461914,47
+damped_velocity,baseline,primary,Defensive Coverage,7.059535980224609,681
+damped_velocity,baseline,primary,Targeted Receiver,8.32668685913086,207
+damped_velocity,baseline,primary,overall,7.35491943359375,888
+damped_velocity,baseline,3s,Defensive Coverage,13.166826248168945,38
+damped_velocity,baseline,3s,Targeted Receiver,16.541828155517578,9
+damped_velocity,baseline,3s,overall,13.813100814819336,47
+toward_ball_land,baseline,primary,Defensive Coverage,5.305082321166992,681
+toward_ball_land,baseline,primary,Targeted Receiver,1.6797966957092285,207
+toward_ball_land,baseline,primary,overall,4.459998607635498,888
+toward_ball_land,baseline,3s,Defensive Coverage,7.2137346267700195,38
+toward_ball_land,baseline,3s,Targeted Receiver,2.493497133255005,9
+toward_ball_land,baseline,3s,overall,6.309859752655029,47
+velocity_turning_to_ball,baseline,primary,Defensive Coverage,4.96101188659668,681
+velocity_turning_to_ball,baseline,primary,Targeted Receiver,1.6001862287521362,207
+velocity_turning_to_ball,baseline,primary,overall,4.177576065063477,888
+velocity_turning_to_ball,baseline,3s,Defensive Coverage,7.138333797454834,38
+velocity_turning_to_ball,baseline,3s,Targeted Receiver,2.5093894004821777,9
+velocity_turning_to_ball,baseline,3s,overall,6.251940727233887,47
+kalman,baseline,primary,Defensive Coverage,7.000736236572266,681
+kalman,baseline,primary,Targeted Receiver,6.036865711212158,207
+kalman,baseline,primary,overall,6.776050567626953,888
+kalman,baseline,3s,Defensive Coverage,11.602190971374512,38
+kalman,baseline,3s,Targeted Receiver,9.497737884521484,9
+kalman,baseline,3s,overall,11.199211120605469,47
+kalman_velocity,baseline,primary,Defensive Coverage,5.792487144470215,681
+kalman_velocity,baseline,primary,Targeted Receiver,4.462014675140381,207
+kalman_velocity,baseline,primary,overall,5.482343673706055,888
+kalman_velocity,baseline,3s,Defensive Coverage,10.162866592407227,38
+kalman_velocity,baseline,3s,Targeted Receiver,8.07967472076416,9
+kalman_velocity,baseline,3s,overall,9.763957977294922,47
+kalman_ca,baseline,primary,Defensive Coverage,4.9908447265625,681
+kalman_ca,baseline,primary,Targeted Receiver,3.3930141925811768,207
+kalman_ca,baseline,primary,overall,4.618377208709717,888
+kalman_ca,baseline,3s,Defensive Coverage,9.29438304901123,38
+kalman_ca,baseline,3s,Targeted Receiver,7.0173020362854,9
+kalman_ca,baseline,3s,overall,8.858346939086914,47
+imm,baseline,primary,Defensive Coverage,4.988439559936523,681
+imm,baseline,primary,Targeted Receiver,3.3916335105895996,207
+imm,baseline,primary,overall,4.6162109375,888
+imm,baseline,3s,Defensive Coverage,9.290010452270508,38
+imm,baseline,3s,Targeted Receiver,7.014432907104492,9
+imm,baseline,3s,overall,8.854262351989746,47
+tbl_kalman_speed,baseline,primary,Defensive Coverage,6.0564284324646,681
+tbl_kalman_speed,baseline,primary,Targeted Receiver,2.5072057247161865,207
+tbl_kalman_speed,baseline,primary,overall,5.229075908660889,888
+tbl_kalman_speed,baseline,3s,Defensive Coverage,8.714154243469238,38
+tbl_kalman_speed,baseline,3s,Targeted Receiver,2.9158990383148193,9
+tbl_kalman_speed,baseline,3s,overall,7.603849411010742,47
+tbl_kalman_pos,baseline,primary,Defensive Coverage,5.496553421020508,681
+tbl_kalman_pos,baseline,primary,Targeted Receiver,1.8182532787322998,207
+tbl_kalman_pos,baseline,primary,overall,4.6391119956970215,888
+tbl_kalman_pos,baseline,3s,Defensive Coverage,7.392243385314941,38
+tbl_kalman_pos,baseline,3s,Targeted Receiver,2.4884278774261475,9
+tbl_kalman_pos,baseline,3s,overall,6.453214645385742,47
+tbl_kalman_both,baseline,primary,Defensive Coverage,6.275579929351807,681
+tbl_kalman_both,baseline,primary,Targeted Receiver,2.701566457748413,207
+tbl_kalman_both,baseline,primary,overall,5.442448139190674,888
+tbl_kalman_both,baseline,3s,Defensive Coverage,8.916051864624023,38
+tbl_kalman_both,baseline,3s,Targeted Receiver,2.9156832695007324,9
+tbl_kalman_both,baseline,3s,overall,7.767044544219971,47
+K1,model,primary,Defensive Coverage,2.082526683807373,681
+K1,model,primary,Targeted Receiver,1.3015180826187134,207
+K1,model,primary,overall,1.9004672765731812,888
+K1,model,3s,Defensive Coverage,4.3693647384643555,38
+K1,model,3s,Targeted Receiver,2.8824574947357178,9
+K1,model,3s,overall,4.084637641906738,47
+K2,model,primary,Defensive Coverage,2.0825283527374268,681
+K2,model,primary,Targeted Receiver,1.1536500453948975,207
+K2,model,primary,overall,1.8659992218017578,888
+K2,model,3s,Defensive Coverage,4.227360725402832,38
+K2,model,3s,Targeted Receiver,2.640238046646118,9
+K2,model,3s,overall,3.9234440326690674,47
+K3,model,primary,Defensive Coverage,1.9504725933074951,681
+K3,model,primary,Targeted Receiver,1.3195691108703613,207
+K3,model,primary,overall,1.8034038543701172,888
+K3,model,3s,Defensive Coverage,4.360898494720459,38
+K3,model,3s,Targeted Receiver,2.885653018951416,9
+K3,model,3s,overall,4.078404426574707,47
+K5,model,primary,Defensive Coverage,2.8335084915161133,681
+K5,model,primary,Targeted Receiver,1.4226281642913818,207
+K5,model,primary,overall,2.5046207904815674,888
+K5,model,3s,Defensive Coverage,5.793791770935059,38
+K5,model,3s,Targeted Receiver,3.2293686866760254,9
+K5,model,3s,overall,5.302732467651367,47
+K4,model,primary,Defensive Coverage,2.0709311962127686,681
+K4,model,primary,Targeted Receiver,1.363267421722412,207
+K4,model,primary,overall,1.9059690237045288,888
+K4,model,3s,Defensive Coverage,4.913883209228516,38
+K4,model,3s,Targeted Receiver,2.915902614593506,9
+K4,model,3s,overall,4.5312910079956055,47

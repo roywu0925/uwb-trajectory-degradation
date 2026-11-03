@@ -1,0 +1,4 @@
+predictor,Defensive Coverage_err,Defensive Coverage_n,Targeted Receiver_err,Targeted Receiver_n,overall_err,overall_n
+K1,2.1008,3858,1.3106,1214,1.9117,5072
+K2,2.1061,3858,1.2669,1214,1.9052,5072
+K3,1.9686,3858,1.3466,1214,1.8197,5072

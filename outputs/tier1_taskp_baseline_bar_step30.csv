@@ -1,0 +1,14 @@
+predictor,mean_error,n,coverage,trustworthy
+velocity_turning_to_ball,5.7569,347,0.0366,False
+toward_ball_land,5.8528,347,0.0366,False
+tbl_kalman_pos,5.9849,347,0.0366,False
+tbl_kalman_speed,6.7805,347,0.0366,False
+tbl_kalman_both,6.9413,347,0.0366,False
+constant_velocity,7.0784,347,0.0366,False
+imm,7.2133,347,0.0366,False
+kalman_ca,7.2158,347,0.0366,False
+kalman_velocity,7.7462,347,0.0366,False
+kalman,8.8394,347,0.0366,False
+constant_acceleration,11.2473,347,0.0366,False
+damped_velocity,14.7089,347,0.0366,False
+constant_position,20.9081,347,0.0366,False

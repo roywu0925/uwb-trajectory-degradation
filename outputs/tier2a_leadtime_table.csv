@@ -1,0 +1,9 @@
+signal,model,threshold_source,alarm_sigma,lead_soft,lead_hard
+1. input PSI max,K3,convention (PSI>0.2),0.09106062472533834,-0.08829676484008868,-0.05737879455159244
+1. input PSI max,K5,convention (PSI>0.2),0.09106062472533834,0.06879356725522089,0.8295045244112392
+2. model-vs-physics distance,K3,training data (mean+3sd),0.17177566810978448,-0.16901180822453482,-0.13809383793603858
+2. model-vs-physics distance,K5,training data (mean+3sd),,,
+3. output PSI,K3,convention (PSI>0.2),0.06458454868770946,-0.06182068880245981,-0.03090271851396357
+3. output PSI,K5,convention (PSI>0.2),0.7436655687491166,-0.5838113767685573,0.176899580387461
+4. Kalman NIS (frozen R),K3,"theory (chi2, dof=2)",0.0,0.002763859885249655,0.033681830173745896
+4. Kalman NIS (frozen R),K5,"theory (chi2, dof=2)",0.0,0.15985419198055922,0.9205651491365776
