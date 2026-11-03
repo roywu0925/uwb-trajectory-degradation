@@ -76,6 +76,37 @@ below.
 Every learned variant beats every physics baseline. The *worst* model beats
 the *best* baseline by 40%.
 
+**A re-derivation penalty, not a reporting error.** The table below scores
+the same predictors but not quite the same inputs: its σ = 0 point
+re-derives velocity from position — needed so σ > 0 is an apples-to-apples
+comparison across the sweep — rather than using the tracking system's own
+reported velocity. That costs each predictor a small, predictor-specific
+penalty:
+
+| predictor | clean | σ=0 (degradation pipeline) | penalty |
+|---|---|---|---|
+| `tbl_kalman_speed` | 5.23 | 5.23 | 0% |
+| `toward_ball_land` | 4.46 | 4.50 | 0.9% |
+| K5 | 2.50 | 2.63 | 5% |
+| K3 | 1.80 | 1.99 | 10% |
+
+This previews the velocity-gain mechanism explained below in "Why the
+learned model breaks," and one part of it is structural rather than
+correlational: `tbl_kalman_speed` never reads the provided
+velocity column — its speed comes from a position-only Kalman filter run
+over position history — so its re-derivation penalty is 0% *by
+construction*, and, separately, it is also the slowest of the three to
+degrade under injected noise (1.4×, error at σ=2.0 over σ=0, measured
+within the degradation pipeline alone). That is a mechanism, not a
+coincidence. K3 and K5 both read the column, both pay a penalty (10% and
+5%), and both degrade faster (12.7× and 3.8×) — consistent with the same
+mechanism, but with only two predictors that ordering is not a test of
+it, and isn't claimed as one.
+
+The σ = 0 column of the degradation table below is that pipeline's control
+condition, not the clean measurement above. Compare within a table, not
+across them.
+
 ### Under degradation — the result that matters
 
 | σ (yd) | K3 | K5 | `tbl_kalman_speed` |
@@ -180,12 +211,19 @@ Four findings:
 
 ## Part 2 — the learned models
 
-![K5 vs. all three physics baselines, test split, 1.9s error against sigma, with the crossing marked](outputs/tier1_test_headline_crossing.png)
+![K5 and three physics baselines, test split: 1.9 s displacement error against injected position noise, with the crossing at sigma = 0.93 marked](outputs/tier1_test_headline_crossing.png)
 
 K5 against the three physics baselines this project uses throughout. K5
-leads until σ is about 0.93; the shaded band is where that lead could
+leads until sigma is about 0.93; the shaded band is where that lead could
 statistically end, not a single point. The crossing was verified against
 the pointwise best of all 13 baselines and is unchanged.
+
+Every point here, including sigma = 0, comes from the degradation
+pipeline, which re-derives velocity from position rather than using the
+tracking system's own velocity output. That alone costs K5 5% (2.50 ->
+2.63 yd), so this figure's sigma = 0 column is a control condition, not
+the clean measurement quoted in Headline results. Compare within a
+pipeline, not across them.
 *(Legend code identifiers: "K5 (learned)" = `K5`; "Constant velocity" =
 `constant_velocity`; "Toward ball-landing point (Kalman speed)" =
 `tbl_kalman_speed`; "Velocity + turn-toward-ball" =
@@ -364,6 +402,11 @@ bracket the crossing lives in (0.8–2.0), so the crossing computed against
 the full 13-baseline envelope is identical to the one reported — not just
 close, bit-for-bit identical, because the envelope and `tbl_kalman_speed`
 are the same curve there.
+
+**All reported errors are micro-averages over tracks**
+(`masked_error_at_step`, n = 888 on the test split), not macro-averages
+over plays. Recomputing with equal weight per play gives different
+numbers that are not comparable to anything reported here.
 
 **The test split was opened exactly once**, after all five final models had
 trained, with every variant and all 13 baselines scored in the same pass. The
