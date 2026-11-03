@@ -1,0 +1,39 @@
+# virtual environment
+.venv/
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+
+# data — Kaggle competition files, not for redistribution; see README
+data/
+
+# model weights (checkpoints)
+outputs/checkpoints/
+*.pt
+
+# outputs/ files over 2 MB: regenerable per-play detail tables and
+# intermediate state, not evidence anyone reads directly. Figures and
+# small summary CSVs stay tracked. Listed explicitly (not outputs/* with
+# unignores) so this stays an auditable, append-only list.
+outputs/taskO_clean_full_errors.csv
+outputs/tier1_k3k4_crossover_playlevel.csv
+outputs/tier1_two_axis.csv
+outputs/tier1_k5_tks_crossover_playlevel.csv
+outputs/tier1_test_crossover_playlevel.csv
+outputs/baseline_errors.csv
+outputs/tier1_tbl_crossing_playlevel.csv
+outputs/tier1_taskO_crossover.csv
+outputs/tier1_r_convention_floor_playlevel.csv
+outputs/tier1_r_convention_quadrature_playlevel.csv
+outputs/tier1_crossover.csv
+outputs/tier2a_state.pkl
+outputs/tier1_degradation.csv
+
+# OS cruft
+.DS_Store
+.ipynb_checkpoints/
+
+# Claude Code session state — not project content
+.claude/

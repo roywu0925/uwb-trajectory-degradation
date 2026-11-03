@@ -1,0 +1,8 @@
+# pinned to the versions this project was actually built and run on
+# (Python 3.14.7) -- not a tested-compatible range, just what ran.
+numpy==2.5.3
+pandas==3.0.6
+matplotlib==3.11.2
+pillow==12.3.0
+pyarrow==25.0.1
+torch==2.14.0
