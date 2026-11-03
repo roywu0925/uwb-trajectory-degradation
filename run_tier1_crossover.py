@@ -3,10 +3,9 @@
     python run_tier1_crossover.py
 
 Task B's coarse grid ([0, 0.2, 0.5, 1, 2, 5]) located the
-constant_velocity/kalman crossing only as "somewhere below 0.2" -- below
-NGS's own published accuracy range. This runs a fine grid
-(config.CROSSOVER_SIGMAS) over that region, derived mode only, all ten
-predictors, and:
+constant_velocity/kalman crossing only as "somewhere below 0.2". This runs
+a fine grid (config.CROSSOVER_SIGMAS) over that region, derived mode only,
+all ten predictors, and:
 
   - locates the crossing sigma by linear interpolation between the
     bracketing grid points
@@ -42,7 +41,6 @@ STEP_3S = round(3.0 / DT)
 MAIN_FIGURE_PREDICTORS = ["constant_velocity", "kalman", "kalman_velocity",
                           "imm", "toward_ball_land", "velocity_turning_to_ball",
                           "tbl_kalman_speed", "tbl_kalman_pos", "tbl_kalman_both"]
-NGS_SPEC_RANGE = (0.15, 0.30)
 
 
 # ------------------------------------------------------------------ sweep
@@ -227,8 +225,6 @@ def plot_crossover(play_level, tidy, crossing_sigma, crossing_ci, path):
               .agg(mean="mean", std="std").reset_index())
 
     fig, ax = plt.subplots(figsize=(8, 5.5))
-    ax.axvspan(*NGS_SPEC_RANGE, color="0.85", zorder=0,
-              label=f"NGS spec range ({NGS_SPEC_RANGE[0]}-{NGS_SPEC_RANGE[1]} yd)")
 
     for name in MAIN_FIGURE_PREDICTORS:
         grp = summary[summary["predictor"] == name].sort_values("sigma")

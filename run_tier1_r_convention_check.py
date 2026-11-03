@@ -7,9 +7,10 @@ injected noise) as the FULL position measurement noise, with a 0.05
 floor only to keep R invertible at sigma=0. That implicitly assumes the
 input positions are physically exact before `sigma` is injected -- but
 in `derived` mode, `sigma` is added on top of positions that already
-carry NGS's own real localisation error (the UWB spec, ~0.15-0.3 yd,
-already used elsewhere in this project as `config.KALMAN_R_POS`,
-sigma=0.25). The "quadrature" convention accounts for that:
+carry an assumed baseline measurement noise: `config.KALMAN_R_POS`
+(sigma=0.25), a design constant used elsewhere in this project, not a
+published sensor-accuracy figure (see config.py's own note on why). The
+"quadrature" convention accounts for that:
 
     floor:       sigma_pos = max(sigma, 0.05)
     quadrature:  sigma_pos = sqrt(KALMAN_R_POS + sigma**2)

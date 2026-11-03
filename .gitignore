@@ -30,6 +30,7 @@ outputs/tier1_r_convention_quadrature_playlevel.csv
 outputs/tier1_crossover.csv
 outputs/tier2a_state.pkl
 outputs/tier1_degradation.csv
+outputs/tier1_test_degrade_allbaselines_playlevel.csv
 
 # OS cruft
 .DS_Store

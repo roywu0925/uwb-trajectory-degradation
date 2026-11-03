@@ -180,6 +180,17 @@ Four findings:
 
 ## Part 2 — the learned models
 
+![K5 vs. all three physics baselines, test split, 1.9s error against sigma, with the crossing marked](outputs/tier1_test_headline_crossing.png)
+
+K5 against the three physics baselines this project uses throughout. K5
+leads until σ is about 0.93; the shaded band is where that lead could
+statistically end, not a single point. The crossing was verified against
+the pointwise best of all 13 baselines and is unchanged.
+*(Legend code identifiers: "K5 (learned)" = `K5`; "Constant velocity" =
+`constant_velocity`; "Toward ball-landing point (Kalman speed)" =
+`tbl_kalman_speed`; "Velocity + turn-toward-ball" =
+`velocity_turning_to_ball`.)*
+
 Five variants. Same architecture, folds, seed, features and loss; **each
 changes exactly one thing** relative to K3.
 
@@ -338,6 +349,21 @@ schemes; a play-level split leaks that structure. 272 games → 190 train /
 **5-fold grouped cross-validation** over the 231 train+val games for all
 development decisions. Every play receives an out-of-fold prediction, and the
 fold-to-fold spread is a free error bar.
+
+**The K5/physics crossing sigma is a play-level bootstrap estimate**
+(1,000 resamples, seed 0), which is what the point estimate and 95% CI
+quoted above come from. An independent estimator — linear interpolation on
+the aggregate mean-error curves — gives 0.921 on the same test split,
+consistent with the bootstrap estimate and well inside its interval.
+
+**That crossing was checked against all 13 physics baselines, not just the
+three plotted.** Only 3 had ever been scored under noise on the test split;
+the other 10 (`run_tier1_test_degrade_allbaselines.py`) hadn't. `tbl_kalman_speed`
+turns out to be the pointwise-best baseline at every σ across the entire
+bracket the crossing lives in (0.8–2.0), so the crossing computed against
+the full 13-baseline envelope is identical to the one reported — not just
+close, bit-for-bit identical, because the envelope and `tbl_kalman_speed`
+are the same curve there.
 
 **The test split was opened exactly once**, after all five final models had
 trained, with every variant and all 13 baselines scored in the same pass. The
@@ -595,3 +621,9 @@ the client's own bandwidth binds first; at batch 2 the endpoint does, at
 ~200 req/s with `ModelLatency` 14× its idle value. A clean curve that
 satisfies a textbook law is still only as informative as what it's
 actually measuring.
+
+Every incorrect number this project has had to correct — the 0.23 lag
+figure, the NGS accuracy range, a p99 taken from a single run, and a
+test-split crossing sigma reported without its competing estimator — shared
+one property: it existed in conversation and never in a file. The numbers
+that came from committed outputs have all held up.
