@@ -1,0 +1,597 @@
+# Trajectory Prediction Under Sensor Degradation
+
+Predicting where NFL players will be 1.9 seconds after a pass is thrown — and,
+more interestingly, **measuring which prediction methods survive when the
+tracking sensor gets worse.**
+
+The dataset is NFL Next Gen Stats, a UWB installation reporting positions at
+10 Hz. NFL Football Operations states only that the system *"charts individual
+movements within inches"* — it publishes no numeric accuracy figure
+([operations.nfl.com/gameday/technology/nfl-next-gen-stats](https://operations.nfl.com/gameday/technology/nfl-next-gen-stats)).
+This project measured the published position stream directly rather than
+assume a number: it is quantized to 0.01 yd, with no detectable white noise
+above that step (see Methodology). Every result here is framed as *"what
+happens to this method when you deploy it on cheaper hardware"* — but `σ=0`
+in every experiment below means *this already-processed stream*, not raw
+sensor output. See the note in Methodology before reading any crossing as a
+statement about the real sensor.
+
+For the full Part 1 physics-study detail (Tier 0a/0b, every baseline, the
+Kalman/IMM/hybrid family, the coverage-guard failure and its fix, the R-convention
+adoption) — see [PART1_DETAIL.md](PART1_DETAIL.md).
+
+---
+
+**TL;DR**
+
+| | |
+|---|---|
+| **Best accuracy, held-out test** | a small GRU, **1.80 yd** @1.9 s — vs **4.18 yd** for the best physics baseline |
+| **But** | that same model is unusable at σ = 0.2 yd of added noise — on top of an already-processed stream, not raw sensor output |
+| **Fix** | noise-augmented training; the learned model then beats physics out to **σ = 0.93 yd** |
+| **Mechanism** | the network learns a velocity gain of **~8.8** where physics gives **1.90** — a 4.6× amplifier pointed at the noisiest channel in the dataset |
+
+The project's actual deliverable is not an accuracy number. It is a measured
+answer to **"when should I use a learned model and when should I use a
+Kalman filter?"**
+
+---
+
+## The question
+
+Standard trajectory-prediction work ranks methods on clean data. This project
+asks a different question:
+
+> A tracking system's accuracy is a hardware purchasing decision. If I spend
+> less on anchors, or deploy in a worse RF environment, **which of these
+> methods degrades gracefully and which one falls off a cliff?**
+
+So every experiment has the same shape: inject σ yards of Gaussian noise into
+the player positions, recompute everything downstream, and measure the error
+curve. σ = 0 is the control, and it means *no noise added on top of the
+published NGS stream* — not *raw sensor output*, and not *noise-free*. That
+stream is itself already quantized to 0.01 yd and vendor-processed (see
+Methodology); every σ in this project is noise added on top of whatever
+processing already happened before the data was published, not total sensor
+noise. A reader who assumes σ=0 means raw UWB will misread every number
+below.
+
+---
+
+## Headline results
+
+### Clean data, held-out test split (41 games never touched during development)
+
+| predictor | test @1.9 s (yd) |
+|---|---|
+| **K3** — GRU, no physics base | **1.80** |
+| K2 — GRU residual on `velocity_turning_to_ball` | 1.87 |
+| K1 — GRU residual on `tbl_kalman_speed` | 1.90 |
+| K4 — GRU, Kalman-filtered velocity input | 1.91 |
+| K5 — GRU, noise-augmented training | 2.50 |
+| `velocity_turning_to_ball` (best physics) | 4.18 |
+| `tbl_kalman_speed` | 5.23 |
+| `constant_velocity` | 4.51 |
+
+Every learned variant beats every physics baseline. The *worst* model beats
+the *best* baseline by 40%.
+
+### Under degradation — the result that matters
+
+| σ (yd) | K3 | K5 | `tbl_kalman_speed` |
+|---|---|---|---|
+| 0.0 | 1.99 | 2.63 | 5.23 |
+| 0.2 | **16.41** | 2.96 | 5.37 |
+| 1.0 | 24.58 | 6.68 | 6.38 |
+| 5.0 | 26.38 | 13.56 | 8.34 |
+
+A naively-trained model collapses at σ = 0.2 — a small fraction of a yard of
+*added* noise, on top of an already-processed stream. Noise-augmented
+training moves the collapse point by a factor of five.
+
+**Crossing point (test-measured): σ = 0.9338, 95% CI (0.876, 0.994)**
+
+> Below that, use the learned model. Above it, use the filter.
+
+The cross-validated estimate was 1.0552 — optimistic by 11%, because the
+variant was selected on CV. The test number is the one reported.
+
+---
+
+## Why the learned model breaks
+
+Velocity is not measured; it is computed by differencing adjacent positions:
+
+```
+v[t] = (x[t] − x[t−1]) / Δt
+```
+
+With Δt = 0.1 s, this amplifies position noise by `√2/Δt ≈ 14×`. At σ = 0.2 yd
+the velocity feature carries 2.83 yd/s of noise against true speeds of
+3–8 yd/s — the *direction* of the velocity vector is essentially randomised.
+
+Physics integrates that channel with a gain fixed at the horizon (1.9 s).
+The network's gain is whatever training found optimal, and in training the
+velocity channel was reliable:
+
+| | velocity gain | vs physics |
+|---|---|---|
+| physics (integration) | 1.90 | 1.0× |
+| K3 (clean training input) | **~8.8** (8.78–8.89) | ~4.6× |
+| K4 (Kalman-filtered input) | 1.6–2.1 | ~0.8–1.1× |
+| K5 (noise-augmented) | 0.46–0.56 | ~0.24–0.29× |
+
+Monotonic, in the predicted direction, and **nothing here was hand-tuned** —
+each gain emerged from training.
+
+> **A learned model calibrates its sensitivity to each input according to that
+> input's reliability during training. When deployment reliability changes,
+> the learned gain is wrong — and nothing in the model knows it.**
+
+A Kalman filter has `R` for exactly this. You read the new sensor's spec off
+the datasheet and change one number. There is no equivalent for a trained
+network short of retraining.
+
+K3's soft failure threshold is σ = 0.00276 — below the published data's own
+0.01 yd quantization step (see Methodology). A model with a gain of 8.8 fails
+at a noise level the data cannot even represent. Monitoring cannot cover for
+that; the model has to be fixed.
+
+---
+
+## Part 1 — the physics study
+
+Six closed-form baselines, then Kalman / constant-acceleration / IMM filters,
+then a hybrid. The unifying concept is **baseline length**:
+
+```
+angular error ≈ measurement noise / baseline length
+```
+
+| direction source | baseline | angular error |
+|---|---|---|
+| differencing adjacent frames | 0.6 yd | ±33° |
+| bearing to the ball's landing point | 25 yd | ±0.6° |
+
+Four findings:
+
+1. **Filtering is a losing trade on clean data, and when it stops being one
+   depends on which baseline you ask.** Isolating the cost of smoothing
+   alone — `tbl_kalman_speed` vs. `toward_ball_land`, identical except for
+   where speed comes from (Kalman posterior vs. NGS's own reported speed),
+   measured on held-out clean data — costs **0.77 yd**.
+   - `tbl_kalman_speed` vs. **`constant_velocity`** crosses at **σ = 0.075**:
+     the hybrid is worth it in place of the simplest baseline almost
+     immediately as noise is added.
+   - `tbl_kalman_speed` vs. **`toward_ball_land`** — the same-direction,
+     speed-only isolation above — crosses at **σ = 0.1432** (95% CI
+     0.1355–0.1513). What this means relative to the real sensor's own
+     accuracy is unknown — see Methodology on why no such comparison can be
+     supported from this data. The crossing itself, and the 0.77 yd cost
+     below it, stand as measurements.
+2. **Differentiation amplification.** `constant_velocity` degrades 37.7×; the
+   hybrid degrades 1.8×.
+3. **Corrupting player positions hurts 6–43× more than corrupting the landing
+   point**, because only the former passes through a derivative.
+4. **Clean-data rankings are actively misleading.** The clean-data winner
+   finishes last at σ = 5.
+
+---
+
+## Part 2 — the learned models
+
+Five variants. Same architecture, folds, seed, features and loss; **each
+changes exactly one thing** relative to K3.
+
+| variant | change from K3 | question it answers | result |
+|---|---|---|---|
+| **K3** | — (baseline) | How good is a plain GRU? | Best on clean data |
+| K1 | residual on `tbl_kalman_speed` | Does a physics base help? | **No** |
+| K2 | residual on `velocity_turning_to_ball` | Does a *different* base help? | **No** |
+| K4 | Kalman-filtered velocity input | Does cleaning the input help? | Partially |
+| K5 | noise augmentation in training | Does training under noise help? | **Yes, decisively** |
+
+K1/K2 failing is informative: a physics base only helps where the physics is
+*right*. `velocity_turning_to_ball` is well-specified for targeted receivers
+(where K1/K2 do beat K3) and mis-specified for defenders, who do not run at
+the landing point. Defenders are 76% of the evaluation population, so the
+network spends capacity undoing the base and loses overall.
+
+The architecture is deliberately small: a single GRU layer, hidden size 64,
+**18,050 parameters** against roughly 303,000 target values. Memorisation is
+not available to it.
+
+---
+
+## Part 3 — serving latency and cost
+
+Measured against a real SageMaker real-time endpoint (`ml.m5.large`, K5 only,
+us-west-2, client in Vancouver), against a 10 Hz sensor's ~100 ms frame
+budget.
+
+**Round-trip decomposition** (batch 2, client p50 36.61 ms):
+
+| component | time | share | source |
+|---|---|---|---|
+| model compute | 0.3 ms | 0.8% | local timing (Phase 1) |
+| container, other | 8.8 ms | 24% | CloudWatch `ModelLatency` (avg 9.11, max 24.58) |
+| SageMaker routing | 6.2 ms | 17% | CloudWatch `OverheadLatency` (avg 6.24, max 34.75) |
+| network | 21.3 ms | 58% | client total minus the two above |
+
+The model itself is 0.8% of the round trip. Cold start (the first request
+after the endpoint comes up) is 109.5 ms server-side alone —
+`ModelLatency` 47.3 ms + `OverheadLatency` 62.2 ms — over budget before the
+network is even counted.
+
+**Region**, interleaved so both saw the same network conditions:
+
+| region | p50 | p95 | p99 | min |
+|---|---|---|---|---|
+| us-west-2 | 34.1 ms | 48.4 ms | 57.3 ms | 28.7 ms |
+| us-east-1 | 91.1 ms | 110.6 ms | 124.5 ms | 83.9 ms |
+
+Delta p50 +57.0 ms, delta min +55.2 ms — the two deltas agreeing means this
+is propagation distance, not congestion. Moving the model ~4,000 km costs
++57 ms; the model itself costs 0.3 ms. A factor of 190.
+
+**Batch size** (22 players is one play, the natural serving unit):
+
+| batch | sent | returned | p50 | ms/player |
+|---|---|---|---|---|
+| 2 | 297 B | 3,672 B | 34.0 ms | 17.0 ms |
+| 22 | 10,004 B | 40,123 B | 42.9 ms | 1.9 ms |
+
+11–34× the payload costs 1.26× the latency. Batching a full play's worth of
+players into one request drops the per-player cost 9×; the round trip is
+dominated by fixed cost, not by what's in the request.
+
+**p99 is not a single number.** Six rounds, batch 22, 40 s apart:
+
+| metric | range | variation |
+|---|---|---|
+| p50 | 38.8–45.8 ms | 1.18× |
+| p99 | 76.2–101.7 ms | 1.33× (one round over budget) |
+| max | 83.3–151.5 ms | 1.82× |
+
+An earlier single run reported p99 as 68.9 ms and was described as
+comfortably inside budget — that was the optimistic end of this range, not
+a representative value. Corrected: p99 is 76–102 ms, sitting *on* the
+budget line, not under it. For a 10 Hz hard real-time loop, the nearest
+cloud region is already marginal; real headroom needs a deployment closer
+than Oregon — in-stadium, or same metro.
+
+**Throughput — a load test I got wrong, and chased down.** First attempt
+(threads, batch 22): throughput saturated at ~30 req/s, latency grew
+linearly with concurrency, and Little's Law (latency = concurrency /
+throughput) matched the measured values to within 2–6% (predicted
+293/586/1,115 ms vs. measured 276/562/1,133 ms at concurrency 8/16/32). It
+looked like a textbook endpoint-saturation curve.
+
+It was not the endpoint — server-side `ModelLatency` stayed at 9.5–12 ms
+throughout. Three hypotheses, each tested cheaply rather than assumed:
+
+| hypothesis | test | result |
+|---|---|---|
+| Python GIL | multiprocessing, 8 procs × 8 threads | 35–38 req/s — not it |
+| requests dropped | CloudWatch `Invocations` count | 9,532 sent, 9,532 received — not it |
+| client bandwidth | shrink the response 11× (batch 2) | throughput up 5.9× — that's it |
+
+Two ceilings, and which one binds depends on payload size:
+
+- **batch 22**: client bandwidth, ceiling ~38 req/s = 12.4 Mbit/s.
+  `ModelLatency` 35 ms — the endpoint is working, not saturated.
+- **batch 2**: the endpoint itself, ~200 req/s. `ModelLatency` 143 ms, 14×
+  its idle 9 ms. Client traffic only 6.7 Mbit/s, so bandwidth wasn't
+  binding here.
+
+The endpoint's real capacity was measured after all — at batch 2, ~200
+req/s — without the in-region load generator this originally looked like
+it would need. Shrinking the response was enough.
+
+**Cost.** A game's load is 22 players × 10 Hz = 10 req/s. Measured headroom
+is 4–20×, depending on which ceiling binds (client bandwidth at batch 22,
+the endpoint itself at batch 2). `ml.m5.large` ≈ $0.12/hr, so a 3-hour game
+≈ $0.35.
+
+**What this means for the model choice.** Part 1/2 chose between physics
+baselines and the five learned variants on accuracy and robustness alone.
+Latency turns out not to be a third axis worth weighing: all three
+candidates' compute (K5's 0.3 ms, K3's, and `tbl_kalman_speed`'s) is swamped
+by a ~36 ms serving floor that has nothing to do with which model sits
+behind it. Part 2's conclusion stands unchanged — now for a measured reason
+instead of an assumed one.
+
+---
+
+## Methodology
+
+This is the part worth reading if you are evaluating the engineering rather
+than the football.
+
+**What `σ=0` actually is, and what the sensor's real noise actually is.**
+NFL Football Operations publishes no numeric accuracy figure for NGS — only
+that it *"charts individual movements within inches."* This project measured
+the published position stream directly rather than carry forward an assumed
+number. Three checks, cheapest first: (1) `x`/`y` in the raw files are exact
+multiples of 0.01 yd, no exceptions; (2) the distribution of `x[t]-x[t-1]` is
+discrete — 100.00% of successive differences land exactly on the 0.01 grid,
+nothing in between; (3) an estimator built to detect additive noise (a
+difference-order ladder, validated end-to-end by injecting a known σ=0.10
+into real motion and recovering 0.1001) finds no white noise above the
+quantization step in the real data. **Conclusion: the published stream is
+quantized to 0.01 yd and carries no detectable sensor noise above that — not
+because the sensor is that precise (no UWB system achieves millimetre
+accuracy), but because whatever noise the raw sensor has was removed before
+publication.** `σ=0` in every experiment in this project means *this
+already-processed stream*, not raw sensor output, and every σ>0 is noise
+added on top of it, not total sensor noise. No comparison of a measured
+crossing to "the sensor's accuracy" is supported by this data, and none is
+made below. Full measurement detail, including the PSD check and why its
+apparent high-frequency rolloff turned out to be a windowing artifact (caught
+by re-running it on synthetic white noise before trusting it) rather than
+evidence either way, is in PART1_DETAIL.md.
+
+**Splits by game, not by play.** Plays within a game share players and
+schemes; a play-level split leaks that structure. 272 games → 190 train /
+41 val / 41 test, fixed by seed, IDs written to disk.
+
+**5-fold grouped cross-validation** over the 231 train+val games for all
+development decisions. Every play receives an out-of-fold prediction, and the
+fold-to-fold spread is a free error bar.
+
+**The test split was opened exactly once**, after all five final models had
+trained, with every variant and all 13 baselines scored in the same pass. The
+early-stopping slice was drawn from the 231, never from test.
+
+**A coverage guard that actually fires.** Only ~3.5% of plays have a ball
+flight reaching 3 seconds. The project's original headline horizon was 3 s —
+measured, at one point, on 24 tracks. `MIN_COVERAGE` existed in the config but
+was wired only into the plotting path. The primary horizon is now 1.9 s
+(53% coverage) and every reported number carries its coverage.
+
+> A guard that only fires on plots is not a guard.
+
+**The model's first result was audited rather than reported.** The GRU's
+initial score was 57% better than the best physics baseline. That is not a
+plausible margin for an 18k-parameter model, so it was investigated in three
+layers before being written down:
+
+1. *Scoring* — is the model measured with the same ruler as the baselines?
+   (Two independently written implementations agreeing to four decimals.)
+2. *Alignment* — is the model predicting the same instant it is scored at?
+   (Histogram of which truth frame each prediction lands closest to.)
+3. *Features* — is any future information reachable from the inputs?
+   (Input tensors de-normalised back to field coordinates and searched
+   against the output window.)
+
+All three came back clean. The evidence that settled it was counter-intuitive:
+**at step 1 the model's error is 0.40 yd against the baseline's 0.04 — ten
+times worse.** A model with access to the answer does not lose anywhere.
+
+Then, separately, a mechanism for the 55% was required before the number was
+reported at all. A good number without a mechanism is as untrustworthy as an
+unaudited one.
+
+---
+
+## Reproducing
+
+Budget **~2.5–3 hours end to end** on CPU-only hardware comparable to this
+project's (Apple Silicon). ~1.6 hours of that is measured model-training
+time (the five lines below marked "measured"); the remaining ~15 physics/
+sweep scripts are unmeasured individually but are lighter-weight than
+training — see the runtime note after the code block.
+
+```bash
+# environment — requires a Kaggle account.
+# Python 3.14.7 is what this project was actually built and run on; no
+# other version was tested, so none is claimed to work.
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt   # pinned to the versions actually run
+
+# data preparation — no separate prep script, and no Kaggle API script is
+# included here (this project downloaded manually, not via the Kaggle
+# CLI). Sign in to Kaggle, open the NFL Big Data Bowl 2026 (prediction)
+# competition at
+#   https://www.kaggle.com/competitions/nfl-big-data-bowl-2026-prediction
+# download its train/ folder, and place the files at data/train/
+# (input_2023_wNN.csv + output_2023_wNN.csv, NN = 01..18).
+# cache_pipeline.py builds and caches per-week parquet/npz on first use.
+
+# Part 1 — physics baselines and degradation sweep
+python run_tier0a.py                      # Tier 0a/0b: baselines, Kalman, IMM, NIS check
+python run_tier1_sweep.py                 # Task B: coarse degradation grid, all baselines
+python run_tier1_crossover.py             # Task D/E/F: fine-grid crossover + bootstrap CI
+python run_tier1_twoaxis.py               # Task G/H/I: second (ball-land) degradation axis
+python run_tier1_r_convention_check.py    # floor vs quadrature R, both conventions reported
+python run_tier1_taskn.py                 # Task N: coverage audit, picks the 1.9s primary horizon
+python run_tier1_taskO.py                 # Task O: restates every Part 1 finding at 1.9s + 3s
+
+# Part 2 — model training, cross-validated (CPU; each full run is ~8-28 min — see note)
+python run_tier1_taskj.py                 # expand to 18 weeks, write outputs/splits.json
+python run_tier1_taskp.py                 # write outputs/folds.json, out-of-fold baseline bar
+python run_tier1_taskk.py                 # train K1/K2/K3, 5 folds each      (measured: ~28 min)
+python run_tier1_taskk4.py                # train K4, 5 folds                 (measured: ~10 min*)
+python run_tier1_k5.py                    # train K5, 5 folds                 (measured: ~8 min)
+python run_tier1_taskl.py                 # full 13-baseline + K1-K3 CV table, per-role
+                                           #                                   (measured: ~28 min)
+python run_tier1_taskm.py                 # degradation sweep, K1-K3 + baselines, CV folds only
+python run_tier1_taskk4_degrade.py        # degradation sweep, K4
+python run_tier1_k5_degrade.py            # degradation sweep, K5
+
+# Test-split evaluation — run ONCE. Everything above must be finished and
+# the variant list frozen before this line runs; it is not a selection step.
+python run_tier1_test_pass.py             # train final K1-K5 on all 231 train+val games,
+                                           # score every variant + baseline on the untouched
+                                           # 41-game test split, one pass    (measured: ~20 min)
+python run_tier1_test_degrade.py          # the same degradation sweep, repeated on test
+
+# Part 3 — local half of the serving-latency measurement (CPU inference
+# floor only; no AWS access needed for this one script)
+python run_tier2b_phase1_local.py         # K3/K5/tbl_kalman_speed local inference timing
+```
+
+The rest of Part 3 (the round-trip, region, batch-size, throughput, and
+cost numbers) was measured against a live SageMaker endpoint and is not
+clone-and-run — there is no script that reproduces the latency table
+itself, only the local floor above that it's compared against.
+
+Runtimes marked "measured" are wall-clock times observed on this machine
+(Apple Silicon, CPU only) during development; everything else scales with
+the same per-fold/per-sigma-combo cost and wasn't separately re-timed, so
+treat unmarked lines as the same order of magnitude, not as measured facts.
+*One K4 fold's wall-clock printed as ~7,900s during a run on this machine —
+almost certainly a system sleep/contention artifact, not real compute (its
+epoch count and result were normal); the ~10 min figure excludes that
+anomaly. The leakage audit, frozen-R check, gain measurements, and
+effective-window test (a dozen-plus smaller scripts, each named
+`run_tier1_*`) aren't included above — they're forward-pass-only checks
+against already-trained checkpoints, not part of the path to the headline
+numbers. See Repository layout below for what each one answers.
+
+Hardware: CPU only. No GPU is used anywhere — at 18k parameters and ~7,600
+training samples, transfer overhead exceeds the benefit. Peak memory 565 MB
+across 18 weeks of data, via column-selective reads and per-week caching.
+
+---
+
+## Repository layout
+
+**Core library** (imported everywhere below, nothing here runs on its own)
+- `config.py` — paths, weeks, split/fold seeds, noise grids, every tuned constant
+- `data_loader.py` — CSV loading, play-direction mirroring, kinematics, `PlaySample`
+- `cache_pipeline.py` — per-week parquet/npz caching for the full 18-week load
+- `degrade.py` — sensor-noise injection (player-position and ball-land axes)
+- `baselines.py` — six closed-form physics predictors
+- `kalman.py` — hand-written Kalman filter (position-only and velocity-observing)
+- `imm.py` — the 2-model IMM and the constant-acceleration Kalman variant
+- `hybrid.py` — the 2×2 `toward_ball_land` / Kalman-posterior hybrid family
+- `evaluate.py` — scoring and the coverage-gated summary tables
+- `model.py` — feature engineering (incl. K4's Kalman-velocity variant), the GRU, masked loss
+
+**Part 1 — the physics study**
+- `run_tier0a.py` — Tier 0a/0b baselines, Kalman, IMM, the NIS calibration check
+- `run_tier1_sweep.py` — Task B: coarse degradation grid, every baseline
+- `run_tier1_crossover.py` — Task D/E/F: fine-grid crossover sigma + bootstrap CI
+- `run_tier1_twoaxis.py` — Task G/H/I: the ball-land degradation axis
+- `run_tier1_r_convention_check.py` — floor vs. quadrature R, side by side (adopted quadrature)
+- `run_tier1_taskn.py` — Task N: coverage audit; picks 1.9s as the honest primary horizon
+- `run_tier1_taskO.py` — Task O: restates every earlier finding at 1.9s with coverage attached
+
+**Part 2 — the learned models**
+- `run_tier1_taskj.py` / `run_tier1_taskj_bonus.py` — expand to 18 weeks; re-run Part 1 on it
+- `run_tier1_taskp.py` — writes `outputs/folds.json`; the out-of-fold baseline bar K1-K5 beat
+- `run_tier1_taskk.py` — shared training/checkpointing/eval code; trains K1, K2, K3
+- `run_tier1_taskk4.py` / `run_tier1_taskk4_degrade.py` / `run_tier1_taskk4_role.py` — K4
+- `run_tier1_k5.py` / `run_tier1_k5_degrade.py` — K5 (on-the-fly noise augmentation)
+- `run_tier1_taskl.py` — full 13-baseline + K1-K3 CV comparison table, per-role
+- `run_tier1_taskm.py` — the degradation sweep that found the sigma=0.2 collapse
+
+**The leakage audit and mechanism checks** (why the headline numbers are trusted)
+- `run_tier1_taskk_checkB.py` / `_check1_2.py` / `_close.py` / `_permute.py` / `_permute2.py` —
+  metric/alignment/input-window audit and the label-permutation negative controls
+- `run_tier1_taskm_diag.py` — fine sigma grid, gate saturation, output-magnitude checks
+- `run_tier1_taskm_gain.py` / `run_tier1_gain_full.py` — the velocity-gain measurement (K1/K3/K4/K5)
+- `run_tier1_frozenr.py` / `_bystep.py` — is Kalman-family robustness structural or "being told"?
+- `run_tier1_k3k4_crossover.py` / `run_tier1_k5_tks_crossover.py` — the two crossing-sigma bootstraps
+- `run_tier1_k5_closing_check.py` / `_check2.py` — did K5 converge on `toward_ball_land`? (no)
+- `run_tier1_effective_window.py` — the fixed-ramp smoothing-window test
+
+**Test split**
+- `run_tier1_test_pass.py` — the single frozen-model evaluation against the 41 held-out games
+- `run_tier1_test_degrade.py` — the degradation sweep repeated on that same split
+
+**Tests and utilities**
+- `test_kalman.py`, `test_imm.py`, `smoke_test_degrade.py`, `imm_divergence_check.py` — unit/sanity checks
+- `animate.py` — produces `outputs/play_animation.gif`
+
+**Outputs** (`outputs/`)
+- `splits.json`, `folds.json`, `final_val_games.json` — every frozen game-ID partition, by seed
+- `checkpoints/` — every trained model: 5 CV folds × 5 variants, plus the 5 final test-split models
+- `*.csv` — every numeric result in this document, one file per script that produced it
+- Not committed: checkpoints and the large per-play detail tables (>2 MB) —
+  both are regenerated by the scripts above, not evidence meant to be read
+  directly. Figures and small summary CSVs are committed.
+
+**Serving artifact** (`deploy_k5/`)
+- The one checkpoint that isn't a regenerable intermediate: the packaged
+  K5 model actually deployed for Part 3 (`model.pth`, `model.tar.gz`,
+  `code/inference.py`), 148 KB. Unlike `outputs/checkpoints/` — 32
+  training-run checkpoints, reproducible by re-running Part 2 — this is
+  the only way to reproduce Part 3's serving numbers without retraining,
+  so it's committed.
+
+---
+
+## Limitations
+
+- **"Truth" is itself a measurement.** The target positions come from NGS, not
+  from physical ground truth. Everything here measures agreement with NGS, not
+  with reality.
+- **Single-player features.** The network sees one player's history, the ball's
+  landing point, and a role flag. It cannot see the other 21 players — which
+  is why its gains on defensive coverage come from correcting a mis-specified
+  baseline rather than from modelling interaction.
+- **The landing point is given.** A deployed system would estimate it from the
+  same noisy stream. This is tested as a second degradation axis, but with an
+  isotropic Gaussian, which a real landing-point estimator's error is not.
+- **IMM's robustness is conditional.** Frozen-R testing shows most of the
+  Kalman family is structurally robust, but IMM degrades 4.4× when `R` is not
+  updated — its model-selection likelihood is parameterised by `R`.
+- **3-second horizon numbers are not trustworthy** (~3% coverage). They are
+  reported alongside their coverage, never alone.
+- **Monitoring was explored and not carried forward.** Drift-detection
+  signals were built and evaluated but are not part of this project's
+  conclusions; see `TIER2A_RESULTS.md`, not summarised here.
+- **The batch-22 endpoint ceiling is an estimate, not a measurement**
+  (~90 req/s, extrapolated from the measured batch-2 figure). The client's
+  own bandwidth bound throughput at batch 22 before the endpoint did;
+  measuring the endpoint's batch-22 ceiling directly needs an in-region
+  load client, which this project didn't build.
+- **Only K5 was deployed.** `tbl_kalman_speed`'s local batch-22 cost
+  (8.93 ms) vs. K5's (0.63 ms) suggests a Kalman endpoint would add roughly
+  51 ms to the round trip — still inside the 100 ms budget — but that is an
+  estimate from local CPU timing, not a measurement on `ml.m5.large`.
+- **The p99 range (76–102 ms) was sampled in one afternoon, 40 s apart.**
+  It is that window's range, not a range across times of day — a
+  cross-time-of-day sample could be wider.
+
+---
+
+## Notes on process
+
+Sixteen forward predictions were written down before the experiments that
+would test them. **Three were correct.**
+
+That ratio is in the repository on purpose. The checks in this project are
+reliable; the guesses about what they would find were not. Six hypotheses were
+stated specifically enough to be killed, and were:
+
+| hypothesis | outcome |
+|---|---|
+| The 57% gap is a metric mismatch | Refuted — scoring was clean |
+| Role inversion proves leakage | Withdrawn — physics is simply wrong for defenders |
+| The degradation curve has a threshold | Refuted — smooth and concave |
+| Gate saturation is the mechanism | Refuted — saturation *decreases* under noise |
+| K4 keeps the same gain with a cleaner input | Refuted — the gain itself changed |
+| K5 rediscovered the hand-designed solution | Refuted — shared mechanism, not shared solution |
+
+In several of these the replacement explanation was better than the original.
+That is the argument for writing hypotheses down in a form that can lose.
+
+A seventh, from serving rather than modelling: the Part 3 throughput
+sweep's first attempt (threads, batch 22) produced a textbook saturation
+curve — latency grew linearly with concurrency and matched Little's Law
+(latency = concurrency / throughput) to within 2–6%. It was not measuring
+the endpoint: server-side `ModelLatency` stayed flat at 9.5–12 ms
+throughout. Three candidate explanations were tested cheaply rather than
+assumed — the Python GIL (ruled out: multiprocessing only moved throughput
+from ~30 to ~35–38 req/s), dropped requests (ruled out: CloudWatch
+`Invocations` matched sent exactly, 9,532/9,532), and client bandwidth
+(confirmed: shrinking the response 11× by dropping to batch 2 raised
+throughput 5.9×). The real result was two ceilings, not one — at batch 22
+the client's own bandwidth binds first; at batch 2 the endpoint does, at
+~200 req/s with `ModelLatency` 14× its idle value. A clean curve that
+satisfies a textbook law is still only as informative as what it's
+actually measuring.
