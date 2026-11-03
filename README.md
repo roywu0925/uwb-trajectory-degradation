@@ -475,6 +475,11 @@ pip install -r requirements.txt   # pinned to the versions actually run
 # (input_2023_wNN.csv + output_2023_wNN.csv, NN = 01..18).
 # cache_pipeline.py builds and caches per-week parquet/npz on first use.
 
+# sanity checks — fast, no Kaggle data needed for the two synthetic ones
+PYTHONPATH=. python scripts/inspect_data.py     # confirm the schema on disk
+PYTHONPATH=. python scripts/test_kalman.py      # synthetic sanity checks for the Kalman filter
+PYTHONPATH=. python scripts/test_imm.py         # synthetic sanity checks for the IMM
+
 # Part 1 — physics baselines and degradation sweep
 PYTHONPATH=. python scripts/run_tier0a.py                      # Tier 0a/0b: baselines, Kalman, IMM, NIS check
 PYTHONPATH=. python scripts/run_tier1_sweep.py                 # Task B: coarse degradation grid, all baselines
@@ -502,6 +507,8 @@ PYTHONPATH=. python scripts/run_tier1_test_pass.py             # train final K1-
                                                                  # score every variant + baseline on the untouched
                                                                  # 41-game test split, one pass    (measured: ~20 min)
 PYTHONPATH=. python scripts/run_tier1_test_degrade.py          # the same degradation sweep, repeated on test
+PYTHONPATH=. python scripts/plot_headline_crossing.py           # regenerates the Part 2 figure from
+                                                                 # tier1_test_degrade_summary.csv, written above
 
 # Part 3 — local half of the serving-latency measurement (CPU inference
 # floor only; no AWS access needed for this one script)
@@ -586,10 +593,14 @@ import ...`), which is what `PYTHONPATH=.` is for.
   on test for the first time, verifying the crossing against the full 13-baseline envelope
 
 **Tests and utilities**
-- `test_kalman.py`, `test_imm.py` — synthetic sanity checks, stay at the repo root (no run_* dependency)
-- `scripts/smoke_test_degrade.py`, `scripts/imm_divergence_check.py` — unit/sanity checks; moved into
+- `scripts/test_kalman.py`, `scripts/test_imm.py`, `scripts/inspect_data.py` — synthetic sanity
+  checks and a raw-schema check; in `scripts/` (each has a `__main__` block, invoked directly)
+- `scripts/smoke_test_degrade.py`, `scripts/imm_divergence_check.py` — unit/sanity checks; also in
   `scripts/` because both import from `scripts/run_tier1_sweep.py`
-- `animate.py` — produces `outputs/play_animation.gif`
+- `scripts/plot_headline_crossing.py` — regenerates the Part 2 figure (`tier1_test_headline_crossing.png`)
+  from the committed `tier1_test_degrade_summary.csv`
+- `animate.py` — library module (no `__main__`), imported by `scripts/run_tier0a.py` to produce
+  `outputs/play_animation.gif`; stays at the repo root
 
 **Outputs** (`outputs/`)
 - `splits.json`, `folds.json`, `final_val_games.json` — every frozen game-ID partition, by seed

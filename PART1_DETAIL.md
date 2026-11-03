@@ -86,12 +86,12 @@ the number of plays still contributing at that step.
 
 ```bash
 pip install -r requirements.txt
-python inspect_data.py     # confirm the schema on disk
-python test_kalman.py      # synthetic sanity checks for the Kalman filter
-python test_imm.py         # synthetic sanity checks for the IMM
 
 # run scripts live in scripts/; PYTHONPATH=. so they can still import the
 # library modules (config.py, kalman.py, ...), which stay at the repo root
+PYTHONPATH=. python scripts/inspect_data.py     # confirm the schema on disk
+PYTHONPATH=. python scripts/test_kalman.py      # synthetic sanity checks for the Kalman filter
+PYTHONPATH=. python scripts/test_imm.py         # synthetic sanity checks for the IMM
 PYTHONPATH=. python scripts/run_tier0a.py       # Tier 0a + 0b: physics baselines and filters, clean data
 PYTHONPATH=. python scripts/run_tier1_taskn.py       # Tier 1: coverage audit, picks the primary horizon
 PYTHONPATH=. python scripts/smoke_test_degrade.py    # sanity checks before the degradation sweep
