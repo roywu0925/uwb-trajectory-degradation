@@ -1,12 +1,12 @@
 predictor,Defensive Coverage,Targeted Receiver
-velocity_turning_to_ball,2.707,1.174
-constant_velocity,2.34,1.991
-imm,2.419,2.06
-kalman_ca,2.42,2.061
-imm_resigma,2.521,2.157
-toward_ball_land,3.31,1.499
-kalman_velocity,2.929,2.738
-constant_acceleration,2.921,3.048
-kalman,3.721,3.716
-damped_velocity,3.565,4.033
-constant_position,6.391,8.545
+velocity_turning_to_ball,2.674,1.016
+constant_velocity,2.327,1.854
+imm,2.409,1.917
+kalman_ca,2.411,1.918
+imm_resigma,2.512,2.009
+toward_ball_land,3.309,1.334
+kalman_velocity,2.941,2.594
+constant_acceleration,2.875,2.772
+kalman,3.754,3.585
+damped_velocity,3.494,3.985
+constant_position,6.231,8.435

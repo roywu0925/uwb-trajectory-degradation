@@ -701,10 +701,13 @@ extraction. Checked directly:
 1. **Decimal precision**: `x` and `y` in the raw files are exact multiples
    of 0.01 yd, no exceptions (multiplying by 100 gives an integer 100.00%
    of the time).
-2. **Difference histogram** (the decisive test; saved as
-   `outputs/sensor_noise_diff_histogram.png`): **100.00%** of `x[t]-x[t-1]`
+2. **Difference histogram** (the decisive test): **100.00%** of `x[t]-x[t-1]`
    values land exactly on the 0.01 grid. Discrete spikes at 0, ±0.01,
-   ±0.02..., nothing in between.
+   ±0.02..., nothing in between. (A figure of this histogram existed at
+   one point but its generating script is gone and could not be recovered
+   from git history or the working tree; not re-citing an artifact that
+   can't be reproduced — the claim itself is a committed-data fact,
+   checkable directly against `data/train/`.)
 3. **End-to-end validation of the estimator itself**: injected known σ=0.10
    noise into the *real* (unquantized) motion tracks and re-ran the ladder
    — recovered 0.1007, 0.1001, 0.1001 at orders 2/3/4, clean convergence by

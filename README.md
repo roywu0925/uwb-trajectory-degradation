@@ -31,6 +31,13 @@ adoption) — see [PART1_DETAIL.md](PART1_DETAIL.md).
 | **Fix** | noise-augmented training; the learned model then beats physics out to **σ = 0.93 yd** |
 | **Mechanism** | the network learns a velocity gain of **~8.8** where physics gives **1.90** — a 4.6× amplifier pointed at the noisiest channel in the dataset |
 
+![Animated single play: actual player positions vs. a constant velocity baseline prediction, while the ball is in the air.](outputs/play_animation.gif)
+
+One play — the longest ball flight in the dataset, chosen because the
+motion is clearest at that length — over 4.0 s. The gap between the
+filled (actual) and open (constant velocity) circles is what every
+number in this document is trying to shrink.
+
 The project's actual deliverable is not an accuracy number. It is a measured
 answer to **"when should I use a learned model and when should I use a
 Kalman filter?"**
@@ -184,6 +191,14 @@ angular error ≈ measurement noise / baseline length
 | differencing adjacent frames | 0.6 yd | ±33° |
 | bearing to the ball's landing point | 25 yd | ±0.6° |
 
+![Mean displacement error vs. time since the throw, for all 11 physics-only baselines, clean data.](outputs/error_curves.png)
+
+`constant_position` (orange) — no velocity at all — diverges fastest and
+worst; every baseline that uses velocity clusters well below it. (Two of
+the eleven baselines, `constant_acceleration` and
+`velocity_turning_to_ball`, share a color in matplotlib's 10-color
+default cycle; neither is the one this caption points to.)
+
 Four findings:
 
 1. **Filtering is a losing trade on clean data, and when it stops being one
@@ -202,6 +217,16 @@ Four findings:
      below it, stand as measurements.
 2. **Differentiation amplification.** `constant_velocity` degrades 37.7×; the
    hybrid degrades 1.8×.
+
+![Fine-grid crossover, sigma 0 to 0.3 yd injected position noise, 3s horizon: constant_velocity vs. eight Kalman/IMM/hybrid baselines.](outputs/tier1_crossover.png)
+
+`constant_velocity` (blue) is the only baseline that moves much across
+this range; the other eight — Kalman, IMM, and the toward-ball-land
+hybrid family — stay flat. Position noise is injected and velocity
+re-derived at every sigma including 0, so this figure's sigma=0 is the
+degradation pipeline's own control condition, not the clean baseline
+table above.
+
 3. **Corrupting player positions hurts 6–43× more than corrupting the landing
    point**, because only the former passes through a derivative.
 4. **Clean-data rankings are actively misleading.** The clean-data winner
@@ -380,6 +405,13 @@ apparent high-frequency rolloff turned out to be a windowing artifact (caught
 by re-running it on synthetic white noise before trusting it) rather than
 evidence either way, is in PART1_DETAIL.md.
 
+![Power spectral density of x and y position noise vs. frequency, both axes, with a 3-5 Hz reference floor marked.](outputs/sensor_noise_psd.png)
+
+The apparent rolloff above ~1 Hz is a windowing artifact, not measured
+sensor noise, confirmed by re-running this same check on synthetic white
+noise before trusting it. This figure alone is inconclusive; the
+quantization check above it is decisive.
+
 **Splits by game, not by play.** Plays within a game share players and
 schemes; a play-level split leaks that structure. 272 games → 190 train /
 41 val / 41 test, fixed by seed, IDs written to disk.
@@ -419,6 +451,12 @@ was wired only into the plotting path. The primary horizon is now 1.9 s
 (53% coverage) and every reported number carries its coverage.
 
 > A guard that only fires on plots is not a guard.
+
+![Track coverage percentage vs. time since the throw, with the chosen 1.9s primary horizon and the old 3s headline horizon marked.](outputs/horizon_coverage.png)
+
+Coverage falls off sharply after 1.5s; the old 3s headline horizon
+covers just 3.5% of tracks, which is why this project's primary horizon
+is 1.9s (53% coverage) instead.
 
 **The model's first result was audited rather than reported.** The GRU's
 initial score was 57% better than the best physics baseline. That is not a
