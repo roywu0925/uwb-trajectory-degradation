@@ -194,10 +194,7 @@ angular error ≈ measurement noise / baseline length
 ![Mean displacement error vs. time since the throw, for all 11 physics-only baselines, clean data.](outputs/error_curves.png)
 
 `constant_position` (orange) — no velocity at all — diverges fastest and
-worst; every baseline that uses velocity clusters well below it. (Two of
-the eleven baselines, `constant_acceleration` and
-`velocity_turning_to_ball`, share a color in matplotlib's 10-color
-default cycle; neither is the one this caption points to.)
+worst; every baseline that uses velocity clusters well below it.
 
 Four findings:
 

@@ -221,6 +221,10 @@ By role, mean error (yards):
 | `damped_velocity` | 3.565 | 4.033 |
 | `constant_position` | 6.391 | 8.545 |
 
+*(These figures are week 1 only, matching the main results table above.
+Recomputed on the full 18 weeks, every value moves by less than 0.3 yd and
+the ordering is unchanged.)*
+
 Every baseline that uses the landing point does *better* on the targeted
 receiver than on the defender covering them — not worse. Giving every
 player the same known destination turns out to be far more informative

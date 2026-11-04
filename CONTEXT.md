@@ -220,7 +220,8 @@ Readings:
 - **The role split inverts the hypothesis this file used to have.**
   `Targeted Receiver` error is *lower* than `Defensive Coverage`, not
   higher, for every baseline except `constant_acceleration` and
-  `damped_velocity`. Giving every player the same known landing point
+  `damped_velocity` [corrected 2026-11-03: `constant_position` inverts as
+  well]. Giving every player the same known landing point
   turns out to be far more informative for the receiver actually running
   to it than for the defender reacting in real time — worth stating
   plainly in the README rather than assuming intent is harder to predict

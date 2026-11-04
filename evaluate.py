@@ -116,6 +116,30 @@ def summarise_by_role(errors: pd.DataFrame) -> pd.DataFrame:
     return table.loc[table.mean(axis=1).sort_values().index]
 
 
+# matplotlib's default cycle has 10 colors; this project runs 11 baselines
+# through plot_error_curves, so the 11th silently repeated the 1st (two
+# unrelated baselines rendered in identical blue) until this was caught.
+# Explicit (color, linestyle) per predictor -- 11 distinct colors, grouped
+# into 4 linestyles so no two series share both, the same redundancy the
+# Part 2 headline figure uses for colorblind/grayscale safety. Falls back
+# to matplotlib's own cycling for any predictor not listed here, so this
+# doesn't silently break if a baseline is added later -- it just loses the
+# guaranteed-distinct treatment until this map is extended.
+CURVE_STYLE = {
+    "constant_acceleration":    ("#1f77b4", "-"),
+    "constant_position":        ("#ff7f0e", "-"),
+    "constant_velocity":        ("#2ca02c", "-"),
+    "damped_velocity":          ("#d62728", "--"),
+    "imm":                      ("#9467bd", "--"),
+    "imm_resigma":              ("#8c564b", "--"),
+    "kalman":                   ("#e377c2", "-."),
+    "kalman_ca":                ("#7f7f7f", "-."),
+    "kalman_velocity":          ("#bcbd22", "-."),
+    "toward_ball_land":         ("#17becf", ":"),
+    "velocity_turning_to_ball": ("#000000", ":"),
+}
+
+
 def plot_error_curves(curves: pd.DataFrame, path):
     """The first real figure of the project."""
     import matplotlib.pyplot as plt
@@ -123,7 +147,9 @@ def plot_error_curves(curves: pd.DataFrame, path):
     fig, ax = plt.subplots(figsize=(7.5, 4.8))
     for name, grp in curves.groupby("predictor"):
         grp = grp[grp["coverage"] >= MIN_COVERAGE].sort_values("seconds")
-        ax.plot(grp["seconds"], grp["mean_error"], label=name, linewidth=1.8)
+        color, ls = CURVE_STYLE.get(name, (None, "-"))
+        ax.plot(grp["seconds"], grp["mean_error"], label=name, linewidth=1.8,
+                color=color, linestyle=ls)
 
     ax.set_xlabel("time since throw (s)")
     ax.set_ylabel("mean displacement error (yards)")
