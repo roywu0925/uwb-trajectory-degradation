@@ -317,8 +317,14 @@ network is even counted.
 | us-east-1 | 91.1 ms | 110.6 ms | 124.5 ms | 83.9 ms |
 
 Delta p50 +57.0 ms, delta min +55.2 ms — the two deltas agreeing means this
-is propagation distance, not congestion. Moving the model ~4,000 km costs
+is propagation distance, not congestion. Moving the model ~3,500 km costs
 +57 ms; the model itself costs 0.3 ms. A factor of 190.
+*(Distance: great-circle, Oregon to Virginia. AWS does not publish data-centre
+locations, so this uses the publicly reported sites for us-west-2 (Boardman,
+OR) and us-east-1 (Ashburn, VA): about 3,500 km. For this Vancouver client the
+move adds about 3,300 km one way (461 km to Oregon, 3,750 km to Virginia).
++57 ms implies a fibre route about 1.7× the straight-line distance, which is
+typical.)*
 
 **Batch size** (22 players is one play, the natural serving unit):
 
@@ -376,8 +382,10 @@ it would need. Shrinking the response was enough.
 
 **Cost.** A game's load is 22 players × 10 Hz = 10 req/s. Measured headroom
 is 4–20×, depending on which ceiling binds (client bandwidth at batch 22,
-the endpoint itself at batch 2). `ml.m5.large` ≈ $0.12/hr, so a 3-hour game
-≈ $0.35.
+the endpoint itself at batch 2). `ml.m5.large` real-time hosting lists at
+$0.115/hr in us-west-2 (AWS Price List, usage type `USW2-Host:ml.m5.large`,
+publication 2026-11-06), so a 3-hour game, an assumed length, costs ≈ $0.35.
+This is the list price; the billed rate was not checked against Cost Explorer.
 
 **What this means for the model choice.** Part 1/2 chose between physics
 baselines and the five learned variants on accuracy and robustness alone.
