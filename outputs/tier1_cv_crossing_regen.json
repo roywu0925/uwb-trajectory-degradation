@@ -1,13 +1,16 @@
 {
+ "label": "cv",
+ "note": "999 of 1000 bootstrap resamples produced a crossing within the sigma grid 1.0-2.0; 1 produced none in range and was dropped, as in the repo's own bootstrap. The CI is over the valid draws.",
  "point": 1.0551836015687,
- "n_plays": 1214,
- "n_games": 229,
- "boot_n_valid": 999,
- "boot_median": 1.0555337722549065,
  "ci95": [
   1.0209128420974225,
   1.0881345844020176
  ],
+ "boot_n_valid": 999,
+ "boot_n_dropped": 1,
+ "n_plays": 1214,
+ "n_games": 229,
+ "boot_median": 1.0555337722549065,
  "grid": [
   1.0,
   1.2,
@@ -1034,7 +1037,6 @@
   1.0370583146935077,
   1.0261160357554286
  ],
- "label": "cv",
  "source_file": "tier1_k5_tks_crossover_playlevel.csv",
  "source_sha256": "7653831711f76c008de4337baeb8d3584cb2ee139cde476fc1bfb23e78066942"
 }

@@ -188,7 +188,7 @@ def main():
     rng = np.random.default_rng(0)
     n_plays = len(plays)
     print(f"(bootstrap over {n_plays} test plays -- far fewer than the "
-         f"{231} train+val games the CV crossing was bootstrapped over)")
+         f"1,214 train+val plays (229 of the 231 games have a play reaching 1.9 s) the CV crossing was bootstrapped over)")
     crossings = []
     for _ in range(1000):
         idx = rng.integers(0, n_plays, size=n_plays)

@@ -82,10 +82,16 @@ def run(path, grid):
         draws.append(np.nan if c is None else c)
     d = np.array(draws)
     v = d[~np.isnan(d)]
+    n_drop = int(np.isnan(d).sum())
     return {
-        "point": point, "n_plays": n, "n_games": len({g for g, _ in plays}),
-        "boot_n_valid": int(len(v)), "boot_median": float(np.median(v)) if len(v) else None,
+        "note": (f"{len(v)} of 1000 bootstrap resamples produced a crossing within the sigma grid "
+                 f"{grid[0]}-{grid[-1]}; {n_drop} produced none in range and {'was' if n_drop == 1 else 'were'} "
+                 "dropped, as in the repo's own bootstrap. The CI is over the valid draws."),
+        "point": point,
         "ci95": [float(np.percentile(v, 2.5)), float(np.percentile(v, 97.5))] if len(v) else None,
+        "boot_n_valid": int(len(v)), "boot_n_dropped": n_drop,
+        "n_plays": n, "n_games": len({g for g, _ in plays}),
+        "boot_median": float(np.median(v)) if len(v) else None,
         "grid": list(grid), "k5_mean_by_sigma": [round(float(x), 4) for x in mk5],
         "tks_mean_by_sigma": [round(float(x), 4) for x in mtks],
         "draws": [None if np.isnan(x) else float(x) for x in d],
@@ -128,10 +134,9 @@ def main():
             Path(a.out).write_text(json.dumps(r, indent=1))
         return
     grid = [float(x) for x in a.grid.split(",")]
-    r = run(a.playlevel, grid)
-    r["label"] = a.label
-    r["source_file"] = Path(a.playlevel).name
-    r["source_sha256"] = hashlib.sha256(Path(a.playlevel).read_bytes()).hexdigest()
+    r = {"label": a.label, **run(a.playlevel, grid),
+         "source_file": Path(a.playlevel).name,
+         "source_sha256": hashlib.sha256(Path(a.playlevel).read_bytes()).hexdigest()}
     summ = {k: v for k, v in r.items() if k != "draws"}
     print(json.dumps(summ, indent=1))
     if a.out:

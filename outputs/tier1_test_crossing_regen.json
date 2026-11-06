@@ -1,13 +1,16 @@
 {
+ "label": "test",
+ "note": "1000 of 1000 bootstrap resamples produced a crossing within the sigma grid 0.0-2.0; 0 produced none in range and were dropped, as in the repo's own bootstrap. The CI is over the valid draws.",
  "point": 0.9338206768822297,
- "n_plays": 207,
- "n_games": 41,
- "boot_n_valid": 1000,
- "boot_median": 0.9348336519554425,
  "ci95": [
   0.8760739642506514,
   0.9940100767921844
  ],
+ "boot_n_valid": 1000,
+ "boot_n_dropped": 0,
+ "n_plays": 207,
+ "n_games": 41,
+ "boot_median": 0.9348336519554425,
  "grid": [
   0.0,
   0.8,
@@ -1040,7 +1043,6 @@
   0.9537223607427527,
   0.9536637895738046
  ],
- "label": "test",
  "source_file": "tier1_test_crossover_playlevel.csv",
  "source_sha256": "3b1c419052cffcb0fb511cc81810180daae25440f4ec010abba6d1ddb9718118"
 }

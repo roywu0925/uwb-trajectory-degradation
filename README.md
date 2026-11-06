@@ -128,11 +128,20 @@ A naively-trained model collapses at σ = 0.2 — a small fraction of a yard of
 training moves the collapse point by a factor of five.
 
 **Crossing point (test-measured): σ = 0.9338, 95% CI (0.876, 0.994)**
+*(play-level bootstrap, 1,000 resamples, all 1,000 with a crossing in range)*
 
 > Below that, use the learned model. Above it, use the filter.
 
-The cross-validated estimate was 1.0552 — optimistic by 11%, because the
-variant was selected on CV. The test number is the one reported.
+The cross-validated estimate was 1.0552, 95% CI (1.021, 1.088). It comes from
+1,214 plays in 229 of the 231 train+val games; the other two games have no
+play long enough to reach 1.9 s. 999 of the 1,000 bootstrap resamples had a
+crossing within the CV grid (σ 1.0–2.0); the one with none in range was
+dropped. CV was optimistic by about **12%** (11.5%; bootstrap 95% CI
+5.2%–17.6%) because the variant was selected on CV, so treat the 12% as
+approximate. The test number is the one reported. Both crossings use the
+same estimator; see `outputs/tier1_cv_crossing_regen.json`,
+`outputs/tier1_test_crossing_regen.json`, `outputs/tier1_crossing_optimism.json`
+and `scripts/regen_crossing.py`.
 
 ---
 
@@ -289,7 +298,13 @@ budget.
 | SageMaker routing | 6.2 ms | 17% | CloudWatch `OverheadLatency` (avg 6.24, max 34.75) |
 | network | 21.3 ms | 58% | client total minus the two above |
 
-The model itself is 0.8% of the round trip. Cold start (the first request
+The model itself is 0.8% of the round trip. That share is a lower bound: model
+compute was timed on the development machine's CPU (Phase 1), which may be
+faster than an `ml.m5.large`'s. The endpoint's own metrics cannot isolate
+compute — `ModelLatency` bundles it with container overhead — but they bound it
+from above: 9.11 / 36.61 ≈ 25% of the round trip.
+
+Cold start (the first request
 after the endpoint comes up) is 109.5 ms server-side alone —
 `ModelLatency` 47.3 ms + `OverheadLatency` 62.2 ms — over budget before the
 network is even counted.
