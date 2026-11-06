@@ -1,0 +1,34 @@
+{
+ "cv_point": 1.0551836015687,
+ "test_point": 0.9338206768822297,
+ "optimism_pct_of_cv": 11.501593135644333,
+ "optimism_pct_of_test": 12.996384390594955,
+ "optimism_boot_median_pct": 11.388495409866826,
+ "optimism_boot_ci95_pct": [
+  5.155436432687096,
+  17.647382329969773
+ ],
+ "n_paired_draws": 999,
+ "same_estimator": "find_crossing + 1000 play-level resamples, default_rng(0), step 19, both sides",
+ "differs": {
+  "cv_grid": [
+   1.0,
+   1.2,
+   1.4,
+   1.6,
+   1.8,
+   2.0
+  ],
+  "test_grid": [
+   0.0,
+   0.8,
+   1.0,
+   1.2,
+   1.4,
+   1.6,
+   1.8,
+   2.0
+  ],
+  "note": "CV play-level data has no sigma < 1.0, so the test crossing (0.93) cannot be estimated on the CV grid; dropping the test grid's 1.0 point moves the test crossing by +0.0068, bounding the grid effect at ~0.01 of the 0.12 gap"
+ }
+}
