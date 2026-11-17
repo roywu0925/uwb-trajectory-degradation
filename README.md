@@ -127,6 +127,10 @@ A naively-trained model collapses at σ = 0.2 — a small fraction of a yard of
 *added* noise, on top of an already-processed stream. Noise-augmented
 training moves the collapse point by a factor of five.
 
+Put as a direct ratio: from σ=0 to σ=0.2, K3's error grows 8.2× (1.99 →
+16.41); K5's grows only 1.1× (2.63 → 2.96). Both from
+`outputs/tier1_test_degrade_summary.csv`.
+
 **Crossing point (test-measured): σ = 0.9338, 95% CI (0.876, 0.994)**
 *(play-level bootstrap, 1,000 resamples, all 1,000 with a crossing in range)*
 
@@ -165,11 +169,13 @@ velocity channel was reliable:
 |---|---|---|
 | physics (integration) | 1.90 | 1.0× |
 | K3 (clean training input) | **~8.8** (8.78–8.89) | ~4.6× |
-| K4 (Kalman-filtered input) | 1.6–2.1 | ~0.8–1.1× |
+| K4 (Kalman-filtered input) | 1.6–2.1 | ~0.9–1.1× |
 | K5 (noise-augmented) | 0.46–0.56 | ~0.24–0.29× |
 
 Monotonic, in the predicted direction, and **nothing here was hand-tuned** —
-each gain emerged from training.
+each gain emerged from training. Full numbers, all five variants (K1/K2
+included), both averaging conventions: `outputs/tier1_velocity_gain.csv`,
+from `scripts/run_tier1_gain_full.py`.
 
 > **A learned model calibrates its sensitivity to each input according to that
 > input's reliability during training. When deployment reliability changes,
